@@ -389,10 +389,11 @@ async function showResultBE(feature) {
 
     switch (feature) {
             case FEATURE.GET_ICON_COMPONENTS:
-                URL += ENDPOINTS.GET_ICON_COMPONENTS;
+                URL += ENDPOINTS.GET_FIGMA_COMPONENTS;
                 payload = {
-                    fileId: FIGMA_FILE_ID,
-                    accessToken: FIGMA_ACCESS_TOKEN,
+                    figmaFileId: FIGMA_FILE_ID,
+                    figmaAccessToken: FIGMA_ACCESS_TOKEN,
+                    googleSheetId: GOOGLE_SHEET_ID,
                 };
                 break;
     }
