@@ -327,9 +327,9 @@ function resetReloadButton() {
 
 /**
  * Displays icon components in the icon component container
- * @param {Object} data - The response data containing icon components with format: { images: [{ url: "...", title: "..." }] }
+ * @param {Object} response - The response data containing icon components with format: { success: boolean, data: [{ componentId: "...", imageUrl: "..." }], message: "...", totalCount: number }
  */
-function displayIconComponents(data) {
+function displayIconComponents(response) {
     const container = document.getElementById('main-content');
     if (!container) {
         console.error('Icon component container not found');
@@ -339,10 +339,16 @@ function displayIconComponents(data) {
     // Clear existing content
     container.innerHTML = '';
 
-    // Get images array from API response
-    const images = data.images || [];
+    // Check if response is successful
+    if (!response.success) {
+        container.innerHTML = `<p class="error-message">Error: ${response.message || 'Failed to load icon components'}</p>`;
+        return;
+    }
+
+    // Get data array from API response
+    const iconData = response.data || [];
     
-    if (images.length === 0) {
+    if (iconData.length === 0) {
         container.innerHTML = '<p class="no-icons">No icon components found.</p>';
         return;
     }
@@ -351,15 +357,16 @@ function displayIconComponents(data) {
     const gridContainer = document.createElement('div');
     gridContainer.className = 'icon-grid';
     
-    images.forEach((image, index) => {
+    iconData.forEach((item, index) => {
         const iconWrapper = document.createElement('div');
         iconWrapper.className = 'icon-wrapper';
         
         const iconImg = document.createElement('img');
         iconImg.className = 'icon-component';
-        iconImg.src = image.url;
-        iconImg.alt = image.title || `Icon ${index + 1}`;
-        iconImg.title = image.title || `Icon ${index + 1}`;
+        iconImg.src = item.imageUrl;
+        iconImg.alt = `Icon Component ${index + 1}`;
+        iconImg.title = `Component ID: ${item.componentId}`;
+        iconImg.draggable = true;
         
         // Add error handling for broken images
         iconImg.onerror = function() {
@@ -367,15 +374,45 @@ function displayIconComponents(data) {
             this.alt = 'Icon not available';
         };
         
+        // Set actual size from API
+        if (item.width && item.height) {
+            iconImg.style.width = item.width + 'px';
+            iconImg.style.height = item.height + 'px';
+            iconImg.style.maxWidth = 'none';
+            iconImg.style.maxHeight = 'none';
+        }
+        
+        // Add drag event listeners
+        iconImg.addEventListener('dragstart', function(e) {
+            // Store component data for potential drop handling
+            e.dataTransfer.setData('text/plain', JSON.stringify({
+                componentId: item.componentId,
+                imageUrl: item.imageUrl,
+                width: item.width,
+                height: item.height
+            }));
+        });
+        
         const iconLabel = document.createElement('span');
         iconLabel.className = 'icon-label';
-        iconLabel.textContent = image.title || `Icon ${index + 1}`;
+        iconLabel.textContent = `Component ${index + 1}`;
+        
+        const iconId = document.createElement('span');
+        iconId.className = 'icon-id';
+        iconId.textContent = item.componentId;
         
         iconWrapper.appendChild(iconImg);
         iconWrapper.appendChild(iconLabel);
+        iconWrapper.appendChild(iconId);
         gridContainer.appendChild(iconWrapper);
     });
     
+    // Add summary information
+    const summary = document.createElement('div');
+    summary.className = 'icon-summary';
+    summary.innerHTML = `<p>${response.message} (Total: ${response.totalCount})</p>`;
+    
+    container.appendChild(summary);
     container.appendChild(gridContainer);
 }
 
@@ -405,10 +442,12 @@ async function showResultBE(feature) {
     fetch(URL, options)
         .then((response) => {
             if (!response.ok) {
+                console.log('Response:', response);
                 chrome.runtime.sendMessage({ source: 'stream', status: 'error' });
                 showToast(RESULT.ERROR, MESSAGES.FAILED);
                 resetReloadButton();
             } else {
+                console.log('Response:', response);
                 readStreamBE(response, feature);
             }
         })
@@ -418,3 +457,4 @@ async function showResultBE(feature) {
             resetReloadButton();
         });
 }
+

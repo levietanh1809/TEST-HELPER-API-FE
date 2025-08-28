@@ -3,7 +3,6 @@ const OPENAI_PROXY_BASE_URL = 'https://api.testcraft.app';
 const BE_API_LOCAL = 'http://localhost:3000';
 
 
-
 const STORAGE = {
     CUSTOM_SERVER_URL: 'custom-server-url',
     ELEMENT_PICKED: 'element-picked',
@@ -74,6 +73,7 @@ const FEATURE = {
     AUTOMATE_TESTS: 'automated-tests',
     CHECK_ACCESSIBILITY: 'check-accessibility',
     GENERATE_TEST_IDEAS: 'test-ideas',
+    GET_ICON_COMPONENTS: 'icon-components',
 };
 
 const automateBtn = document.getElementById('generate-tests');
