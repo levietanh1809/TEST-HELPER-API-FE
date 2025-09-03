@@ -326,6 +326,77 @@ function resetReloadButton() {
 }
 
 /**
+ * Creates a high-quality drag image with sharp rendering
+ * @param {DragEvent} event - The drag event
+ * @param {Object} item - The icon item data
+ * @param {HTMLImageElement} originalImg - The original image element
+ */
+function createHighQualityDragImage(event, item, originalImg) {
+    // Create container div gấp đôi kích thước để lừa browser
+    const container = document.createElement('div');
+    container.className = 'temp-drag-image';
+    
+    // TRICK: Container gấp đôi kích thước
+    const containerWidth = item.width * 2;
+    const containerHeight = item.height * 2;
+    
+    container.style.position = 'absolute';
+    container.style.top = '-99999px';
+    container.style.left = '-99999px';
+    container.style.width = containerWidth + 'px';
+    container.style.height = containerHeight + 'px';
+    container.style.backgroundColor = 'transparent';
+    
+    // Create image element với kích thước thật
+    const tempImg = document.createElement('img');
+    tempImg.src = item.imageUrl;
+    
+    // Style image để hiển thị đúng kích thước thật nhưng ở center của container gấp đôi
+    tempImg.style.position = 'absolute';
+    tempImg.style.width = item.width + 'px';
+    tempImg.style.height = item.height + 'px';
+    tempImg.style.left = ((containerWidth - item.width) / 2) + 'px';
+    tempImg.style.top = ((containerHeight - item.height) / 2) + 'px';
+    
+    
+    // Pixel rendering sắc nét
+    tempImg.style.imageRendering = 'crisp-edges';
+    
+    // Add image vào container
+    container.appendChild(tempImg);
+    
+    // Add container to document
+    document.body.appendChild(container);
+    
+    // Wait for image to load then set as drag image
+    if (tempImg.complete) {
+        // Image already loaded - dùng container gấp đôi nhưng anchor tại center
+        event.dataTransfer.setDragImage(container, containerWidth / 2, containerHeight / 2);
+    } else {
+        // Wait for image to load
+        tempImg.onload = function() {
+            event.dataTransfer.setDragImage(container, containerWidth / 2, containerHeight / 2);
+        };
+        
+        // Fallback if image fails to load
+        tempImg.onerror = function() {
+            // Use original image as fallback
+            event.dataTransfer.setDragImage(originalImg, originalImg.offsetWidth / 2, originalImg.offsetHeight / 2);
+            container.remove();
+        };
+    }
+    
+    // Cleanup after drag operation
+    setTimeout(() => {
+        if (container.parentNode) {
+            container.remove();
+        }
+    }, 1000);
+}
+
+
+
+/**
  * Displays icon components in the icon component container
  * @param {Object} response - The response data containing icon components with format: { success: boolean, data: [{ componentId: "...", imageUrl: "..." }], message: "...", totalCount: number }
  */
@@ -384,6 +455,9 @@ function displayIconComponents(response) {
         
         // Add drag event listeners
         iconImg.addEventListener('dragstart', function(e) {
+            // Prevent default to ensure consistent behavior
+            e.stopPropagation();
+            
             // Store component data for potential drop handling
             e.dataTransfer.setData('text/plain', JSON.stringify({
                 componentId: item.componentId,
@@ -391,6 +465,19 @@ function displayIconComponents(response) {
                 width: item.width,
                 height: item.height
             }));
+            
+            // Set drag effect
+            e.dataTransfer.effectAllowed = 'copy';
+            
+            // Create a high-quality drag image
+            createHighQualityDragImage(e, item, iconImg);
+        });
+        
+        // Add drag end listener to cleanup
+        iconImg.addEventListener('dragend', function(e) {
+            // Cleanup any temporary elements
+            const tempElements = document.querySelectorAll('.temp-drag-image');
+            tempElements.forEach(el => el.remove());
         });
         
         const iconLabel = document.createElement('span');
@@ -427,11 +514,24 @@ async function showResultBE(feature) {
     switch (feature) {
             case FEATURE.GET_ICON_COMPONENTS:
                 URL += ENDPOINTS.GET_FIGMA_COMPONENTS;
+                
+                // Check if there's an extracted node-id from input
+                const extractedNodeId = window.extractedNodeId;
+                
                 payload = {
                     figmaFileId: FIGMA_FILE_ID,
                     figmaAccessToken: FIGMA_ACCESS_TOKEN,
                     googleSheetId: GOOGLE_SHEET_ID,
                 };
+                
+                // If user provided a Figma URL with node-id, use it instead of Google Sheet
+                if (extractedNodeId) {
+                    payload.specificNodeId = [extractedNodeId];
+                    console.log('Using extracted node-id from input:', [extractedNodeId]);
+                } else {
+                    console.log('Using Google Sheet for component IDs');
+                }
+                
                 break;
     }
 
