@@ -319,9 +319,14 @@ async function readStreamBE(response, feature) {
  */
 function resetReloadButton() {
     const reloadBtn = document.getElementById('reload-btn');
+    const stopBtn = document.getElementById('stop-btn');
     if (reloadBtn) {
         reloadBtn.disabled = false;
         reloadBtn.classList.remove('loading');
+        reloadBtn.style.display = 'inline-flex';
+    }
+    if (stopBtn) {
+        stopBtn.style.display = 'none';
     }
 }
 
@@ -480,6 +485,28 @@ function displayIconComponents(response) {
             tempElements.forEach(el => el.remove());
         });
         
+        // Add context menu (right-click) listener for code generation
+        iconImg.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Show context menu with component data
+            const componentData = {
+                componentId: item.componentId,
+                imageUrl: item.imageUrl,
+                width: item.width,
+                height: item.height,
+                figmaResponse: item.figmaResponse // This should contain the full figma response
+            };
+            
+            // Check if figmaToCode functionality is available
+            if (typeof showContextMenu === 'function') {
+                showContextMenu(e, componentData);
+            } else {
+                console.warn('Figma to Code functionality not loaded');
+            }
+        });
+        
         const iconLabel = document.createElement('span');
         iconLabel.className = 'icon-label';
         iconLabel.textContent = `Component ${index + 1}`;
@@ -518,10 +545,18 @@ async function showResultBE(feature) {
                 // Check if there's an extracted node-id from input
                 const extractedNodeId = window.extractedNodeId;
                 
+                // Load min size config from storage (default 500x500)
+                const sizeConfig = await chrome.storage.local.get([
+                    STORAGE.FIGMA_MIN_WIDTH,
+                    STORAGE.FIGMA_MIN_HEIGHT,
+                ]);
+                
                 payload = {
                     figmaFileId: FIGMA_FILE_ID,
                     figmaAccessToken: FIGMA_ACCESS_TOKEN,
                     googleSheetId: GOOGLE_SHEET_ID,
+                    minWidth: sizeConfig[STORAGE.FIGMA_MIN_WIDTH] || 500,
+                    minHeight: sizeConfig[STORAGE.FIGMA_MIN_HEIGHT] || 500,
                 };
                 
                 // If user provided a Figma URL with node-id, use it instead of Google Sheet
@@ -539,6 +574,17 @@ async function showResultBE(feature) {
 
     console.log('Sending request to:', URL, options);
 
+    // Setup abort controller for STOP functionality
+    if (typeof iconFetchController === 'undefined' || iconFetchController === null) {
+        try { iconFetchController = new AbortController(); } catch (e) {}
+    } else {
+        try { iconFetchController.abort(); } catch (e) {}
+        try { iconFetchController = new AbortController(); } catch (e) {}
+    }
+    if (options && iconFetchController && iconFetchController.signal) {
+        options.signal = iconFetchController.signal;
+    }
+
     fetch(URL, options)
         .then((response) => {
             if (!response.ok) {
@@ -552,8 +598,13 @@ async function showResultBE(feature) {
             }
         })
         .catch((e) => {
-            chrome.runtime.sendMessage({ source: 'stream', status: 'error' });
-            showToast(RESULT.ERROR, MESSAGES.FAILED);
+            if (e && e.name === 'AbortError') {
+                console.log('Fetch aborted by user');
+                showToast(RESULT.SUCCESS, 'Stopped');
+            } else {
+                chrome.runtime.sendMessage({ source: 'stream', status: 'error' });
+                showToast(RESULT.ERROR, MESSAGES.FAILED);
+            }
             resetReloadButton();
         });
 }

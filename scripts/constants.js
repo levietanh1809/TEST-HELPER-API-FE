@@ -1,6 +1,6 @@
 const OPENAI_PROXY_BASE_URL = 'https://api.testcraft.app';
 
-const BE_API_LOCAL = 'http://localhost:3000';
+const BE_API_LOCAL = 'http://10.1.45.119:3000';
 
 
 const STORAGE = {
@@ -16,6 +16,14 @@ const STORAGE = {
     POM: 'pom',
     SITE_URL: 'site-url',
     TEST_IDEAS: 'test-ideas',
+    FIGMA_TO_CODE_FRAMEWORK: 'figma-to-code-framework',
+    FIGMA_TO_CODE_CSS_FRAMEWORK: 'figma-to-code-css-framework',
+    FIGMA_TO_CODE_MODEL: 'figma-to-code-model',
+    FIGMA_TO_CODE_RESPONSIVE: 'figma-to-code-responsive',
+    FIGMA_TO_CODE_INTERACTIONS: 'figma-to-code-interactions',
+    FIGMA_MIN_WIDTH: 'figma-min-width',
+    FIGMA_MIN_HEIGHT: 'figma-min-height',
+    FIGMA_SIZE_PRESET: 'figma-size-preset',
 };
 
 const LANGUAGE = {
@@ -66,6 +74,9 @@ const ENDPOINTS = {
     PING: '/api/ping',
     MODELS: '/api/models',
     GET_FIGMA_COMPONENTS: '/api/images/from-sheet',
+    FIGMA_TO_CODE_CONVERT: '/api/images/figma-to-code/convert',
+    FIGMA_TO_CODE_CREATE_PACKAGE: '/api/images/figma-to-code/create-package',
+    FIGMA_TO_CODE_OPTIONS: '/api/images/figma-to-code/options',
 };
 
 const FEATURE = {
@@ -74,6 +85,7 @@ const FEATURE = {
     CHECK_ACCESSIBILITY: 'check-accessibility',
     GENERATE_TEST_IDEAS: 'test-ideas',
     GET_ICON_COMPONENTS: 'icon-components',
+    FIGMA_TO_CODE: 'figma-to-code',
 };
 
 const automateBtn = document.getElementById('generate-tests');

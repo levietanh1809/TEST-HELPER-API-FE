@@ -3,19 +3,38 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Add reload button event listener
     const reloadBtn = document.getElementById('reload-btn');
+    const stopBtn = document.getElementById('stop-btn');
     if (reloadBtn) {
         reloadBtn.addEventListener('click', handleReload);
+    }
+    if (stopBtn) {
+        stopBtn.addEventListener('click', handleStop);
     }
 });
 
 /**
  * Loads icon components from API
  */
+let iconFetchController = null;
+
+function setLoadingUI(isLoading) {
+    const reloadBtn = document.getElementById('reload-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    if (isLoading) {
+        if (reloadBtn) reloadBtn.style.display = 'none';
+        if (stopBtn) stopBtn.style.display = 'inline-flex';
+    } else {
+        if (reloadBtn) reloadBtn.style.display = 'inline-flex';
+        if (stopBtn) stopBtn.style.display = 'none';
+    }
+}
+
 function loadIconComponents() {
     const container = document.getElementById('main-content');
     if (container) {
         container.innerHTML = '<div class="loading-message">Loading icon components...</div>';
     }
+    setLoadingUI(true);
     showResultBE(FEATURE.GET_ICON_COMPONENTS);
 }
 
@@ -54,6 +73,15 @@ function handleReload() {
     reloadBtn.disabled = true;
     reloadBtn.classList.add('loading');    
     loadIconComponents();
+}
+
+function handleStop() {
+    try {
+        if (iconFetchController) {
+            iconFetchController.abort();
+        }
+    } catch (e) {}
+    setLoadingUI(false);
 }
 
 /**

@@ -6,19 +6,19 @@
 }
 
 body {
-    background-color: #1C2430;
+    background-color: #f0f0f0;
     margin: auto;
     padding: 15px;
     border-radius: 10%;
     font-family: 'Sora', sans-serif;
-    color: #FFFFFF;
+    color: black;
     width: 80%;
 }
 
 #generatedTests {
     white-space: pre;
-    background-color: #222222;
-    color: #FFFFFF;
+    background-color: #f0f0f0;
+    color: black;
     margin: 0;
     font-size: 1rem;
 }
@@ -32,7 +32,7 @@ body {
 }
 
 #accessibility-check a {
-    color: white;
+    color: black;
 }
 
 #accessibility-check h3,
@@ -64,7 +64,7 @@ header {
 
 .figma-input-container label {
     font-size: 0.9em;
-    color: #CCCCCC;
+    color: black;
     margin-bottom: 0.3em;
 }
 
@@ -87,6 +87,30 @@ header {
 
 .figma-input-container input::placeholder {
     color: #888888;
+}
+
+.size-config {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+#size-select {
+    width: 220px;
+    padding: 10px 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 6px;
+    background-color: #ffffff;
+    font-family: 'Sora', sans-serif;
+    font-size: 0.9rem;
+    transition: border-color 0.2s ease;
+}
+
+#size-select:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 
@@ -233,14 +257,14 @@ button.edit-btn {
     text-align: center;
     font-size: 1.2rem;
     padding: 2rem;
-    color: #FFFFFF;
+    color: black;
 }
 
 .no-icons {
     text-align: center;
     font-size: 1.1rem;
     padding: 2rem;
-    color: #FFFFFF;
+    color: black;
 }
 
 .icon-grid {
@@ -270,32 +294,46 @@ button.edit-btn {
 }
 
 .icon-wrapper {
+    border: 1px solid transparent;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 8px;
     padding: 10px;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    border: 1px solid transparent;
     border-radius: 8px;
     min-width: 100px;
 }
 
 .icon-id {
-    font-size: 0.8rem;
-    color: #CCCCCC;
+    font-size: 0.75rem;
+    font-family: 'Courier New', monospace;
+    color: #6b7280;
+    background-color: #f9fafb;
     text-align: center;
     word-wrap: break-word;
     max-width: 100%;
+    padding: 3px 6px;
+    border-radius: 4px;
+    border: 1px solid #e5e7eb;
+    margin: 2px 0;
+    font-weight: 400;
+    letter-spacing: 0.3px;
     opacity: 0.8;
 }
 
 .icon-label {
-    font-size: 0.9rem;
-    color: #FFFFFF;
+    border-top: 1px solid #d1d5db;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #374151;
+    background-color: #ffffff;
     text-align: center;
     word-wrap: break-word;
     max-width: 100%;
+    padding: 4px 6px;
+    margin-top: 2px;
+    letter-spacing: 0.5px;
 }
 
 /* Reload Button Styles */
@@ -330,6 +368,27 @@ button.edit-btn {
     transform: none;
 }
 
+.stop-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #ef4444;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.stop-button:hover {
+    background-color: #dc2626;
+    transform: translateY(-1px);
+}
+
 .reload-icon {
     font-size: 1.2rem;
     font-weight: bold;
@@ -347,4 +406,369 @@ button.edit-btn {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* Header buttons styling */
+.header-buttons {
+    margin-right: 2em;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.settings-button {
+    background-color: #6366f1;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.settings-button:hover {
+    background-color: #4f46e5;
+    transform: translateY(-1px);
+}
+
+/* Modal styles */
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #ffffff;
+    border-radius: 12px;
+    max-width: 90%;
+    max-height: 90%;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    font-family: 'Sora', sans-serif;
+}
+
+.settings-modal-content {
+    width: 500px;
+}
+
+.code-modal-content {
+    width: 900px;
+    height: 700px;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    padding: 20px 24px;
+    background-color: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #1e293b;
+}
+
+.close-btn {
+    font-size: 24px;
+    font-weight: bold;
+    color: #64748b;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+    background-color: #e2e8f0;
+    color: #1e293b;
+}
+
+.modal-body {
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.code-modal-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.modal-footer {
+    padding: 16px 24px;
+    background-color: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+/* Settings form styles */
+.setting-group {
+    margin-bottom: 20px;
+}
+
+.setting-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.checkbox-group label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.checkbox-group input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.setting-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 6px;
+    background-color: #ffffff;
+    font-family: 'Sora', sans-serif;
+    font-size: 0.9rem;
+    transition: border-color 0.2s ease;
+}
+
+.setting-group select:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Button styles */
+.save-button {
+    background-color: #10b981;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.save-button:hover {
+    background-color: #059669;
+}
+
+.cancel-button {
+    background-color: #6b7280;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.cancel-button:hover {
+    background-color: #4b5563;
+}
+
+.download-button {
+    background-color: #3b82f6;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.download-button:hover {
+    background-color: #2563eb;
+}
+
+.copy-button {
+    background-color: #8b5cf6;
+    color: white;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    font-weight: 500;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+}
+
+.copy-button:hover {
+    background-color: #7c3aed;
+}
+
+/* Code viewer styles */
+.loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #e5e7eb;
+    border-top: 3px solid #6366f1;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+#code-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.file-tabs {
+    display: flex;
+    background-color: #f1f5f9;
+    border-bottom: 1px solid #e2e8f0;
+    overflow-x: auto;
+}
+
+.file-tab {
+    padding: 12px 16px;
+    cursor: pointer;
+    background-color: #f1f5f9;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-family: 'Sora', sans-serif;
+    font-size: 0.85rem;
+    color: #64748b;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.file-tab:hover {
+    background-color: #e2e8f0;
+    color: #475569;
+}
+
+.file-tab.active {
+    background-color: #ffffff;
+    color: #1e293b;
+    border-bottom-color: #6366f1;
+}
+
+.code-editor {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+#current-filename {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: #475569;
+    font-weight: 500;
+}
+
+#code-display {
+    flex: 1;
+    margin: 0;
+    padding: 16px;
+    background-color: #ffffff;
+    overflow: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    border: none;
+}
+
+#code-display code {
+    font-family: inherit;
+    font-size: inherit;
+    color: #1e293b;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Context menu styles */
+.context-menu {
+    position: fixed;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    z-index: 1001;
+    min-width: 160px;
+    padding: 4px 0;
+    font-family: 'Sora', sans-serif;
+}
+
+.context-menu-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    color: #374151;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.context-menu-item:hover {
+    background-color: #f3f4f6;
+    color: #1f2937;
+}
+
+.fixed-header {
+    z-index: 1000;
+    position: fixed;
+    padding: 2em;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #ffffff;
+}
+
+.main-content {
+    margin-top: 300px;
 }
