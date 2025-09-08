@@ -3,6 +3,7 @@ const OPENAI_PROXY_BASE_URL = 'https://api.testcraft.app';
 const BE_API_LOCAL = 'http://10.1.45.119:3000';
 
 
+
 const STORAGE = {
     CUSTOM_SERVER_URL: 'custom-server-url',
     ELEMENT_PICKED: 'element-picked',
@@ -24,6 +25,10 @@ const STORAGE = {
     FIGMA_MIN_WIDTH: 'figma-min-width',
     FIGMA_MIN_HEIGHT: 'figma-min-height',
     FIGMA_SIZE_PRESET: 'figma-size-preset',
+    TEST_CASE_GENERATION_MODEL: 'test-case-generation-model',
+    TEST_CASE_GENERATION_FRAMEWORK: 'test-case-generation-framework',
+    TEST_CASE_GENERATION_INCLUDE_UI: 'test-case-generation-include-ui',
+    TEST_CASE_GENERATION_LANGUAGE: 'test-case-generation-language',
 };
 
 const LANGUAGE = {
@@ -77,6 +82,7 @@ const ENDPOINTS = {
     FIGMA_TO_CODE_CONVERT: '/api/images/figma-to-code/convert',
     FIGMA_TO_CODE_CREATE_PACKAGE: '/api/images/figma-to-code/create-package',
     FIGMA_TO_CODE_OPTIONS: '/api/images/figma-to-code/options',
+    TEST_CASE_GENERATION: '/api/images/test-case-generation/generate',
 };
 
 const FEATURE = {
@@ -86,6 +92,7 @@ const FEATURE = {
     GENERATE_TEST_IDEAS: 'test-ideas',
     GET_ICON_COMPONENTS: 'icon-components',
     FIGMA_TO_CODE: 'figma-to-code',
+    TEST_CASE_GENERATION: 'test-case-generation',
 };
 
 const automateBtn = document.getElementById('generate-tests');

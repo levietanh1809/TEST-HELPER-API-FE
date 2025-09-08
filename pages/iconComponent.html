@@ -137,10 +137,132 @@
         </div>
     </div>
 
+    <!-- Test Case Generation Modal -->
+    <div id="test-case-modal" class="modal" style="display: none;">
+        <div class="modal-content test-case-modal-content">
+            <div class="modal-header">
+                <h2>Generate Test Cases</h2>
+                <span class="close-btn" id="test-case-close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <label for="srs-description">SRS Description (Optional)</label>
+                    <textarea 
+                        id="srs-description" 
+                        placeholder="Describe functionality to test... e.g. User Login Functionality: Users can log in with email and password, System validates credentials against database, Failed attempts are logged... If left empty, will generate comprehensive test cases based on Figma component."
+                        rows="5"></textarea>
+                </div>
+
+                <div class="setting-group">
+                    <label for="project-name">Project Name (Optional)</label>
+                    <input type="text" id="project-name" placeholder="e.g. E-commerce Platform" />
+                </div>
+
+                <div class="setting-group">
+                    <label for="testing-framework">Testing Framework</label>
+                    <select id="testing-framework">
+                        <option value="manual">Manual Testing (Default)</option>
+                        <option value="cypress">Cypress</option>
+                        <option value="playwright">Playwright</option>
+                        <option value="jest">Jest</option>
+                        <option value="testing_library">Testing Library</option>
+                        <option value="vitest">Vitest</option>
+                        <option value="selenium">Selenium</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <label for="test-generation-model">AI Model</label>
+                    <select id="test-generation-model">
+                        <option value="gpt-4o-mini">GPT-4o Mini (Recommended for cost)</option>
+                        <option value="gpt-4o">GPT-4o (Best quality)</option>
+                        <option value="gpt-4.1">GPT-4.1 (For complex SRS)</option>
+                        <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
+                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                        <option value="gpt-4">GPT-4</option>
+                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Budget)</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <label for="test-generation-language">Test Case Language</label>
+                    <select id="test-generation-language">
+                        <option value="en" selected>English (Default)</option>
+                        <option value="vi">Vietnamese</option>
+                        <option value="ja">Japanese</option>
+                    </select>
+                </div>
+
+                <div class="setting-group checkbox-group">
+                    <label>
+                        <input type="checkbox" id="include-ui-tests" checked>
+                        Include UI Tests (using Figma component data)
+                    </label>
+                </div>
+
+                <div class="setting-group">
+                    <label for="additional-requirements">Additional Requirements (Optional)</label>
+                    <textarea 
+                        id="additional-requirements" 
+                        placeholder="e.g. Use element names as test IDs in selectors, Emphasize validation error states for inputs, Include accessibility tests, Focus on mobile responsiveness, Test keyboard navigation..."
+                        rows="3"></textarea>
+                    <div class="suggestions">
+                        <small style="color: #6b7280;">
+                            <strong>Suggestions:</strong> 
+                            "Use element names as test IDs" • 
+                            "Emphasize input validation error states" • 
+                            "Include keyboard navigation tests" • 
+                            "Focus on mobile viewport testing"
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="generate-test-cases-btn" class="save-button">
+                    <i class="bi bi-play-fill"></i> Generate Test Cases
+                </button>
+                <button id="cancel-test-case-btn" class="cancel-button">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Case Results Modal -->
+    <div id="test-case-results-modal" class="modal" style="display: none;">
+        <div class="modal-content test-case-results-modal-content">
+            <div class="modal-header">
+                <h2 id="test-case-results-title">Generated Test Cases</h2>
+                <span class="close-btn" id="test-case-results-close">&times;</span>
+            </div>
+            <div class="modal-body test-case-results-body">
+                <div class="loading-spinner" id="test-case-loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Generating test cases...</p>
+                </div>
+                <div id="test-case-content" style="display: none;">
+                    <!-- Test case summary will be displayed here -->
+                    <div id="test-case-summary" class="test-summary"></div>
+                    <!-- Test cases will be displayed here -->
+                    <div id="test-case-list" class="test-case-list"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="export-test-cases-btn" class="download-button" style="display: none;">
+                    <i class="bi bi-download"></i> Export Test Cases
+                </button>
+                <button id="close-test-case-results-btn" class="cancel-button">
+                    <i class="bi bi-x-lg"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Context Menu -->
     <div id="context-menu" class="context-menu" style="display: none;">
         <div class="context-menu-item" id="generate-code-item">
             <i class="bi bi-gear-fill"></i> Generate Code
+        </div>
+        <div class="context-menu-item" id="generate-test-case-item">
+            <i class="bi bi-check2-square"></i> Generate Test Case
         </div>
     </div>
 
@@ -155,8 +277,10 @@
 <script src="../deps/highlight/languages/markdown.min.js"></script>
 <script src="../scripts/constants.js"></script>
 <script src="../scripts/utils.js"></script>
+<script src="../scripts/utils/testCaseValidation.js"></script>
 <script src="../scripts/result/common.js"></script>
 <script src="../scripts/result/getIconComponent.js"></script>
 <script src="../scripts/result/figmaToCode.js"></script>
+<script src="../scripts/result/testCaseGeneration.js"></script>
 
 </html>
