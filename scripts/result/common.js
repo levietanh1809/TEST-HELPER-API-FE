@@ -4,6 +4,23 @@ toast.id = 'toast';
 toast.className = 'toast';
 document.body.appendChild(toast);
 
+/**
+ * Helper function to get storage value with fallbacks
+ * @param {string} key - Storage key to retrieve
+ * @returns {Promise<any>} - The storage value
+ */
+async function getStorageValue(key) {
+    if (typeof storageWrapper !== 'undefined') {
+        const result = await storageWrapper.get([key]);
+        return result[key];
+    } else if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        const result = await chrome.storage.local.get([key]);
+        return result[key];
+    } else {
+        return undefined;
+    }
+}
+
 function showToast(result, message) {
     toast.textContent = message;
     toast.classList.add(result);
@@ -86,7 +103,11 @@ async function readStream(response, feature, language = '') {
                         testIdeasTestsContainer.innerHTML = htmlContent;
                         finishIdeas();
                     }
-                    await chrome.runtime.sendMessage({ source: 'stream', status: 'finished' });
+                    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+            await chrome.runtime.sendMessage({ source: 'stream', status: 'finished' });
+        }
+                    }
                     showToast(RESULT.SUCCESS, MESSAGES.SUCCESS);
                     break;
                 }
@@ -96,17 +117,23 @@ async function readStream(response, feature, language = '') {
 
                 for (let line of lines) {
                     if (line.includes('[DONE]')) {
-                        await chrome.runtime.sendMessage({ source: 'stream', status: 'finished' });
+                        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+            await chrome.runtime.sendMessage({ source: 'stream', status: 'finished' });
+        }
+                    }
                     } else {
                         if (line.startsWith('data')) {
                             const possibleJSON = line.slice(6);
                             if (isCompleteJSON(possibleJSON)) {
                                 const json = JSON.parse(possibleJSON);
                                 if (json.choices[0].finish_reason != null) {
-                                    await chrome.runtime.sendMessage({
-                                        source: 'stream',
-                                        status: 'finished',
-                                    });
+                                    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                                        await chrome.runtime.sendMessage({
+                                            source: 'stream',
+                                            status: 'finished',
+                                        });
+                                    }
                                 } else {
                                     if (json.choices[0].delta.content != null) {
                                         let content = json.choices[0].delta.content;
@@ -169,7 +196,9 @@ async function readStream(response, feature, language = '') {
                 }
             }
         } catch (error) {
-            await chrome.runtime.sendMessage({ source: 'stream', status: 'error' });
+            if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                await chrome.runtime.sendMessage({ source: 'stream', status: 'error' });
+            }
             showToast(RESULT.ERROR, MESSAGES.FAILED);
         }
     };
@@ -182,11 +211,24 @@ async function readStream(response, feature, language = '') {
  * @param {string} feature - Automated tests or Test Ideas
  */
 async function showResult(feature) {
-    let data = await chrome.storage.local.get([
-        STORAGE.OPENAI_API_KEY,
-        STORAGE.OPENAI_MODEL,
-        STORAGE.CUSTOM_SERVER_URL,
-    ]);
+    // Use fallback if storageWrapper is not available
+    let data;
+    if (typeof storageWrapper !== 'undefined') {
+        data = await storageWrapper.get([
+            STORAGE.OPENAI_API_KEY,
+            STORAGE.OPENAI_MODEL,
+            STORAGE.CUSTOM_SERVER_URL,
+        ]);
+    } else if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        data = await chrome.storage.local.get([
+            STORAGE.OPENAI_API_KEY,
+            STORAGE.OPENAI_MODEL,
+            STORAGE.CUSTOM_SERVER_URL,
+        ]);
+    } else {
+        // Fallback for web context without chrome extension
+        data = {};
+    }
     const openAiApiKey = data[STORAGE.OPENAI_API_KEY];
     const model = data[STORAGE.OPENAI_MODEL];
     const customServerUrl = data[STORAGE.CUSTOM_SERVER_URL];
@@ -199,24 +241,36 @@ async function showResult(feature) {
         case FEATURE.GENERATE_TEST_IDEAS:
             URL += ENDPOINTS.GENERATE_TEST_IDEAS;
             payload = {
-                sourceCode: (await chrome.storage.local.get([STORAGE.ELEMENT_SOURCE]))[STORAGE.ELEMENT_SOURCE],
+                sourceCode: await getStorageValue(STORAGE.ELEMENT_SOURCE),
             };
             break;
         case FEATURE.CHECK_ACCESSIBILITY:
             URL += ENDPOINTS.CHECK_ACCESSIBILITY;
             payload = {
-                sourceCode: (await chrome.storage.local.get([STORAGE.ELEMENT_SOURCE]))[STORAGE.ELEMENT_SOURCE],
+                sourceCode: await getStorageValue(STORAGE.ELEMENT_SOURCE),
             };
             break;
         case FEATURE.AUTOMATE_TESTS:
             URL += ENDPOINTS.AUTOMATE_TESTS;
-            data = await chrome.storage.local.get([
-                STORAGE.ELEMENT_SOURCE,
-                STORAGE.FRAMEWORK_SELECTED,
-                STORAGE.LANGUAGE_SELECTED,
-                STORAGE.SITE_URL,
-                STORAGE.POM,
-            ]);
+            if (typeof storageWrapper !== 'undefined') {
+                data = await storageWrapper.get([
+                    STORAGE.ELEMENT_SOURCE,
+                    STORAGE.FRAMEWORK_SELECTED,
+                    STORAGE.LANGUAGE_SELECTED,
+                    STORAGE.SITE_URL,
+                    STORAGE.POM,
+                ]);
+            } else if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                data = await chrome.storage.local.get([
+                    STORAGE.ELEMENT_SOURCE,
+                    STORAGE.FRAMEWORK_SELECTED,
+                    STORAGE.LANGUAGE_SELECTED,
+                    STORAGE.SITE_URL,
+                    STORAGE.POM,
+                ]);
+            } else {
+                data = {};
+            }
             payload = {
                 sourceCode: data[STORAGE.ELEMENT_SOURCE],
                 baseUrl: data[STORAGE.SITE_URL],
@@ -228,14 +282,27 @@ async function showResult(feature) {
             break;
         case FEATURE.AUTOMATE_IDEAS:
             URL += ENDPOINTS.AUTOMATE_IDEAS;
-            data = await chrome.storage.local.get([
-                STORAGE.ELEMENT_SOURCE,
-                STORAGE.FRAMEWORK_SELECTED,
-                STORAGE.LANGUAGE_SELECTED,
-                STORAGE.SITE_URL,
-                STORAGE.POM,
-                STORAGE.IDEAS,
-            ]);
+            if (typeof storageWrapper !== 'undefined') {
+                data = await storageWrapper.get([
+                    STORAGE.ELEMENT_SOURCE,
+                    STORAGE.FRAMEWORK_SELECTED,
+                    STORAGE.LANGUAGE_SELECTED,
+                    STORAGE.SITE_URL,
+                    STORAGE.POM,
+                    STORAGE.IDEAS,
+                ]);
+            } else if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                data = await chrome.storage.local.get([
+                    STORAGE.ELEMENT_SOURCE,
+                    STORAGE.FRAMEWORK_SELECTED,
+                    STORAGE.LANGUAGE_SELECTED,
+                    STORAGE.SITE_URL,
+                    STORAGE.POM,
+                    STORAGE.IDEAS,
+                ]);
+            } else {
+                data = {};
+            }
             payload = {
                 sourceCode: data[STORAGE.ELEMENT_SOURCE],
                 baseUrl: data[STORAGE.SITE_URL],
@@ -264,24 +331,36 @@ async function showResult(feature) {
     fetch(URL, options)
         .then((response) => {
             if (response.status === 401) {
-                chrome.runtime.sendMessage({
-                    source: 'stream',
-                    status: 'error',
-                    message: 'INVALID_API_KEY',
-                });
+                if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                    chrome.runtime.sendMessage({
+                        source: 'stream',
+                        status: 'error',
+                        message: 'INVALID_API_KEY',
+                    });
+                }
                 showToast(RESULT.ERROR, MESSAGES.INVALID_API_KEY);
             } else if (response.status === 413) {
+                if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
                 chrome.runtime.sendMessage({ source: 'stream', status: 'error' });
+            }
+                }
                 showToast(RESULT.ERROR, MESSAGES.TOO_LARGE);
             } else if (!response.ok) {
+                if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
                 chrome.runtime.sendMessage({ source: 'stream', status: 'error' });
+            }
+                }
                 showToast(RESULT.ERROR, MESSAGES.FAILED);
             } else {
                 readStream(response, feature, language);
             }
         })
         .catch((e) => {
-            chrome.runtime.sendMessage({ source: 'stream', status: 'error' });
+            if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                chrome.runtime.sendMessage({ source: 'stream', status: 'error' });
+            }
             showToast(RESULT.ERROR, MESSAGES.FAILED);
         });
 }
@@ -304,7 +383,9 @@ async function readStreamBE(response, feature) {
                 console.log('Unknown feature:', feature);
         }
         
-        await chrome.runtime.sendMessage({ source: 'stream', status: 'finished' });
+        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+            await chrome.runtime.sendMessage({ source: 'stream', status: 'finished' });
+        }
         showToast(RESULT.SUCCESS, MESSAGES.SUCCESS);
     } catch (error) {
         console.error('Error processing response:', error);
@@ -546,10 +627,20 @@ async function showResultBE(feature) {
                 const extractedNodeId = window.extractedNodeId;
                 
                 // Load min size config from storage (default 500x500)
-                const sizeConfig = await chrome.storage.local.get([
-                    STORAGE.FIGMA_MIN_WIDTH,
-                    STORAGE.FIGMA_MIN_HEIGHT,
-                ]);
+                let sizeConfig;
+                if (typeof storageWrapper !== 'undefined') {
+                    sizeConfig = await storageWrapper.get([
+                        STORAGE.FIGMA_MIN_WIDTH,
+                        STORAGE.FIGMA_MIN_HEIGHT,
+                    ]);
+                } else if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                    sizeConfig = await chrome.storage.local.get([
+                        STORAGE.FIGMA_MIN_WIDTH,
+                        STORAGE.FIGMA_MIN_HEIGHT,
+                    ]);
+                } else {
+                    sizeConfig = {};
+                }
                 
                 payload = {
                     figmaFileId: FIGMA_FILE_ID,
@@ -589,7 +680,11 @@ async function showResultBE(feature) {
         .then((response) => {
             if (!response.ok) {
                 console.log('Response:', response);
+                if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
                 chrome.runtime.sendMessage({ source: 'stream', status: 'error' });
+            }
+                }
                 showToast(RESULT.ERROR, MESSAGES.FAILED);
                 resetReloadButton();
             } else {
@@ -602,7 +697,11 @@ async function showResultBE(feature) {
                 console.log('Fetch aborted by user');
                 showToast(RESULT.SUCCESS, 'Stopped');
             } else {
+                if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
                 chrome.runtime.sendMessage({ source: 'stream', status: 'error' });
+            }
+                }
                 showToast(RESULT.ERROR, MESSAGES.FAILED);
             }
             resetReloadButton();

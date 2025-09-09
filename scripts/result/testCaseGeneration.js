@@ -5,9 +5,10 @@
 
 // Global variables to store current state
 let testCaseGenerationSettings = {
-    model: 'gpt-4o-mini',
-    testingFramework: 'manual',
-    includeUITests: true
+    model: DEFAULT_SETTINGS.TEST_CASE_GENERATION.model,
+    testingFramework: DEFAULT_SETTINGS.TEST_CASE_GENERATION.testingFramework,
+    includeUITests: DEFAULT_SETTINGS.TEST_CASE_GENERATION.includeUITests,
+    language: DEFAULT_SETTINGS.TEST_CASE_GENERATION.language
 };
 
 let currentGeneratedTestCases = [];
@@ -71,11 +72,18 @@ function validateFigmaResponseQuality(figmaResponse) {
 }
 
 /**
- * Load settings from chrome storage
+ * Load settings from storage
  */
 async function loadTestCaseGenerationSettings() {
     try {
-        const data = await chrome.storage.local.get([
+        // Ensure storageWrapper is available
+        if (typeof storageWrapper === 'undefined') {
+            console.warn('StorageWrapper not available, using default settings');
+            updateTestCaseSettingsUI();
+            return;
+        }
+        
+        const data = await storageWrapper.get([
             STORAGE.TEST_CASE_GENERATION_MODEL,
             STORAGE.TEST_CASE_GENERATION_FRAMEWORK,
             STORAGE.TEST_CASE_GENERATION_INCLUDE_UI,
@@ -83,10 +91,10 @@ async function loadTestCaseGenerationSettings() {
         ]);
 
         testCaseGenerationSettings = {
-            model: data[STORAGE.TEST_CASE_GENERATION_MODEL] || 'gpt-4o-mini',
-            testingFramework: data[STORAGE.TEST_CASE_GENERATION_FRAMEWORK] || 'manual',
+            model: data[STORAGE.TEST_CASE_GENERATION_MODEL] || DEFAULT_SETTINGS.TEST_CASE_GENERATION.model,
+            testingFramework: data[STORAGE.TEST_CASE_GENERATION_FRAMEWORK] || DEFAULT_SETTINGS.TEST_CASE_GENERATION.testingFramework,
             includeUITests: data[STORAGE.TEST_CASE_GENERATION_INCLUDE_UI] !== false,
-            language: data[STORAGE.TEST_CASE_GENERATION_LANGUAGE] || 'en'
+            language: data[STORAGE.TEST_CASE_GENERATION_LANGUAGE] || DEFAULT_SETTINGS.TEST_CASE_GENERATION.language
         };
 
         updateTestCaseSettingsUI();
@@ -96,11 +104,17 @@ async function loadTestCaseGenerationSettings() {
 }
 
 /**
- * Save settings to chrome storage
+ * Save settings to storage
  */
 async function saveTestCaseGenerationSettings() {
     try {
-        await chrome.storage.local.set({
+        // Ensure storageWrapper is available
+        if (typeof storageWrapper === 'undefined') {
+            console.warn('StorageWrapper not available, cannot save settings');
+            return;
+        }
+        
+        await storageWrapper.set({
             [STORAGE.TEST_CASE_GENERATION_MODEL]: testCaseGenerationSettings.model,
             [STORAGE.TEST_CASE_GENERATION_FRAMEWORK]: testCaseGenerationSettings.testingFramework,
             [STORAGE.TEST_CASE_GENERATION_INCLUDE_UI]: testCaseGenerationSettings.includeUITests,
@@ -402,11 +416,11 @@ function getTestCaseFormData() {
     return {
         srsDescription: srsDescription ? srsDescription.value.trim() : '',
         projectName: projectName ? projectName.value.trim() : '',
-        testingFramework: testingFramework ? testingFramework.value : 'manual',
-        model: testGenerationModel ? testGenerationModel.value : 'gpt-4o-mini',
+        testingFramework: testingFramework ? testingFramework.value : DEFAULT_SETTINGS.TEST_CASE_GENERATION.testingFramework,
+        model: testGenerationModel ? testGenerationModel.value : DEFAULT_SETTINGS.TEST_CASE_GENERATION.model,
         includeUITests: includeUITests ? includeUITests.checked : false,
         additionalRequirements: additionalRequirements ? additionalRequirements.value.trim() : '',
-        language: testGenerationLanguage ? testGenerationLanguage.value : 'en'
+        language: testGenerationLanguage ? testGenerationLanguage.value : DEFAULT_SETTINGS.TEST_CASE_GENERATION.language
     };
 }
 

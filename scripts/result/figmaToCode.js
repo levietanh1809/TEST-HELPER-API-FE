@@ -5,11 +5,11 @@
 
 // Global variables to store current state
 let figmaToCodeSettings = {
-    framework: 'vanilla',
-    cssFramework: 'vanilla', 
-    model: 'gpt-4o',
-    includeResponsive: true,
-    includeInteractions: false
+    framework: DEFAULT_SETTINGS.FIGMA_TO_CODE.framework,
+    cssFramework: DEFAULT_SETTINGS.FIGMA_TO_CODE.cssFramework,
+    model: DEFAULT_SETTINGS.FIGMA_TO_CODE.model,
+    includeResponsive: DEFAULT_SETTINGS.FIGMA_TO_CODE.includeResponsive,
+    includeInteractions: DEFAULT_SETTINGS.FIGMA_TO_CODE.includeInteractions
 };
 
 let currentGeneratedFiles = [];
@@ -24,11 +24,18 @@ function initializeFigmaToCode() {
 }
 
 /**
- * Load settings from chrome storage
+ * Load settings from storage
  */
 async function loadFigmaToCodeSettings() {
     try {
-        const data = await chrome.storage.local.get([
+        // Ensure storageWrapper is available
+        if (typeof storageWrapper === 'undefined') {
+            console.warn('StorageWrapper not available, using default settings');
+            updateSettingsUI();
+            return;
+        }
+        
+        const data = await storageWrapper.get([
             STORAGE.FIGMA_TO_CODE_FRAMEWORK,
             STORAGE.FIGMA_TO_CODE_CSS_FRAMEWORK,
             STORAGE.FIGMA_TO_CODE_MODEL,
@@ -37,11 +44,11 @@ async function loadFigmaToCodeSettings() {
         ]);
 
         figmaToCodeSettings = {
-            framework: data[STORAGE.FIGMA_TO_CODE_FRAMEWORK] || 'vanilla',
-            cssFramework: data[STORAGE.FIGMA_TO_CODE_CSS_FRAMEWORK] || 'vanilla',
-            model: data[STORAGE.FIGMA_TO_CODE_MODEL] || 'gpt-4o',
+            framework: data[STORAGE.FIGMA_TO_CODE_FRAMEWORK] || DEFAULT_SETTINGS.FIGMA_TO_CODE.framework,
+            cssFramework: data[STORAGE.FIGMA_TO_CODE_CSS_FRAMEWORK] || DEFAULT_SETTINGS.FIGMA_TO_CODE.cssFramework,
+            model: data[STORAGE.FIGMA_TO_CODE_MODEL] || DEFAULT_SETTINGS.FIGMA_TO_CODE.model,
             includeResponsive: data[STORAGE.FIGMA_TO_CODE_RESPONSIVE] !== false,
-            includeInteractions: data[STORAGE.FIGMA_TO_CODE_INTERACTIONS] || false
+            includeInteractions: data[STORAGE.FIGMA_TO_CODE_INTERACTIONS] || DEFAULT_SETTINGS.FIGMA_TO_CODE.includeInteractions
         };
 
         updateSettingsUI();
@@ -51,11 +58,18 @@ async function loadFigmaToCodeSettings() {
 }
 
 /**
- * Save settings to chrome storage
+ * Save settings to storage
  */
 async function saveFigmaToCodeSettings() {
     try {
-        await chrome.storage.local.set({
+        // Ensure storageWrapper is available
+        if (typeof storageWrapper === 'undefined') {
+            console.warn('StorageWrapper not available, cannot save settings');
+            showToast(RESULT.ERROR, 'Storage not available');
+            return;
+        }
+        
+        await storageWrapper.set({
             [STORAGE.FIGMA_TO_CODE_FRAMEWORK]: figmaToCodeSettings.framework,
             [STORAGE.FIGMA_TO_CODE_CSS_FRAMEWORK]: figmaToCodeSettings.cssFramework,
             [STORAGE.FIGMA_TO_CODE_MODEL]: figmaToCodeSettings.model,
@@ -170,18 +184,18 @@ function setupEventListeners() {
     const sizeSelect = document.getElementById('size-select');
     if (sizeSelect) {
         const sizeToDims = (value) => {
-            switch (value) {
-                case 'small': return { w: 150, h: 150 };
-                case 'medium': return { w: 300, h: 300 };
-                case 'large': return { w: 500, h: 500 };
-                case 'xlarge': return { w: 700, h: 700 };
-                default: return { w: 500, h: 500 };
-            }
+            const preset = Object.values(SIZE_PRESETS).find(p => p.id === value);
+            return preset ? { w: preset.width, h: preset.height } : { w: DEFAULT_SETTINGS.SIZE.width, h: DEFAULT_SETTINGS.SIZE.height };
         };
         const persistPreset = async () => {
+            if (typeof storageWrapper === 'undefined') {
+                console.warn('StorageWrapper not available, cannot persist preset');
+                return;
+            }
+            
             const preset = sizeSelect.value;
             const dims = sizeToDims(preset);
-            await chrome.storage.local.set({
+            await storageWrapper.set({
                 [STORAGE.FIGMA_SIZE_PRESET]: preset,
                 [STORAGE.FIGMA_MIN_WIDTH]: dims.w,
                 [STORAGE.FIGMA_MIN_HEIGHT]: dims.h,
@@ -601,24 +615,36 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeFigmaToCode();
     // Load stored size preset into dropdown and sync dims
     setTimeout(async () => {
-        const data = await chrome.storage.local.get([
+        if (typeof storageWrapper === 'undefined') {
+            console.warn('StorageWrapper not available, using default settings');
+            const sizeSelect = document.getElementById('size-select');
+            if (sizeSelect) {
+                sizeSelect.value = DEFAULT_SETTINGS.SIZE.preset;
+            }
+            return;
+        }
+        
+        const data = await storageWrapper.get([
             STORAGE.FIGMA_SIZE_PRESET,
             STORAGE.FIGMA_MIN_WIDTH,
             STORAGE.FIGMA_MIN_HEIGHT,
         ]);
         const sizeSelect = document.getElementById('size-select');
         if (sizeSelect) {
-            const preset = data[STORAGE.FIGMA_SIZE_PRESET] || 'large';
+            const preset = data[STORAGE.FIGMA_SIZE_PRESET] || DEFAULT_SETTINGS.SIZE.preset;
             sizeSelect.value = preset;
         }
         if (!data[STORAGE.FIGMA_MIN_WIDTH] || !data[STORAGE.FIGMA_MIN_HEIGHT]) {
             // initialize based on preset
-            const preset = (document.getElementById('size-select') || {}).value || 'large';
-            const dims = preset === 'small' ? {w:150,h:150} : preset === 'medium' ? {w:300,h:300} : preset === 'xlarge' ? {w:700,h:700} : {w:500,h:500};
-            await chrome.storage.local.set({
-                [STORAGE.FIGMA_MIN_WIDTH]: dims.w,
-                [STORAGE.FIGMA_MIN_HEIGHT]: dims.h,
-            });
+            const preset = (document.getElementById('size-select') || {}).value || DEFAULT_SETTINGS.SIZE.preset;
+            const presetConfig = Object.values(SIZE_PRESETS).find(p => p.id === preset);
+            const dims = presetConfig ? {w: presetConfig.width, h: presetConfig.height} : {w: DEFAULT_SETTINGS.SIZE.width, h: DEFAULT_SETTINGS.SIZE.height};
+            if (typeof storageWrapper !== 'undefined') {
+                await storageWrapper.set({
+                    [STORAGE.FIGMA_MIN_WIDTH]: dims.w,
+                    [STORAGE.FIGMA_MIN_HEIGHT]: dims.h,
+                });
+            }
         }
     }, 0);
 });

@@ -95,6 +95,109 @@ const FEATURE = {
     TEST_CASE_GENERATION: 'test-case-generation',
 };
 
+// AI Models Configuration
+const AI_MODELS = {
+    GPT5_MINI: {
+        id: 'gpt-5-mini',
+        label: 'GPT-5 Mini (Cost-effective)',
+        pricing: {
+            input: 0.25,
+            cachedInput: 0.025,
+            output: 2.00
+        },
+        limits: {
+            tokensPerMinute: 200000,
+            requestsPerMinute: 500,
+            tokensPerDay: 2000000
+        }
+    },
+    O4_MINI: {
+        id: 'o4-mini',
+        label: 'O4 Mini (Higher quality)',
+        pricing: {
+            input: 1.10,
+            cachedInput: 0.275,
+            output: 4.40
+        },
+        limits: {
+            tokensPerMinute: 200000,
+            requestsPerMinute: 500,
+            tokensPerDay: 2000000
+        }
+    }
+};
+
+// Default model selection
+const DEFAULT_MODELS = {
+    FIGMA_TO_CODE: AI_MODELS.GPT5_MINI.id,
+    TEST_CASE_GENERATION: AI_MODELS.GPT5_MINI.id,
+    GENERAL: AI_MODELS.GPT5_MINI.id
+};
+
+// Framework Options
+const FRAMEWORKS = {
+    FIGMA_TO_CODE: {
+        VANILLA: { id: 'vanilla', label: 'HTML + CSS (Default)' },
+        REACT: { id: 'react', label: 'React' },
+        VUE: { id: 'vue', label: 'Vue' },
+        ANGULAR: { id: 'angular', label: 'Angular' }
+    },
+    CSS: {
+        VANILLA: { id: 'vanilla', label: 'Vanilla CSS (Default)' },
+        TAILWIND: { id: 'tailwind', label: 'Tailwind CSS' },
+        BOOTSTRAP: { id: 'bootstrap', label: 'Bootstrap' },
+        STYLED_COMPONENTS: { id: 'styled-components', label: 'Styled Components' }
+    },
+    TESTING: {
+        MANUAL: { id: 'manual', label: 'Manual Testing (Default)' },
+        CYPRESS: { id: 'cypress', label: 'Cypress' },
+        PLAYWRIGHT: { id: 'playwright', label: 'Playwright' },
+        JEST: { id: 'jest', label: 'Jest' },
+        TESTING_LIBRARY: { id: 'testing_library', label: 'Testing Library' },
+        VITEST: { id: 'vitest', label: 'Vitest' },
+        SELENIUM: { id: 'selenium', label: 'Selenium' }
+    }
+};
+
+// Size Presets
+const SIZE_PRESETS = {
+    SMALL: { id: 'small', label: 'Small (150x150)', width: 150, height: 150 },
+    MEDIUM: { id: 'medium', label: 'Medium (300x300)', width: 300, height: 300 },
+    LARGE: { id: 'large', label: 'Large (500x500)', width: 500, height: 500 },
+    XLARGE: { id: 'xlarge', label: 'Extra Large (700x700)', width: 700, height: 700 }
+};
+
+// Language Options
+const LANGUAGES = {
+    TEST_CASE: {
+        ENGLISH: { id: 'en', label: 'English (Default)' },
+        VIETNAMESE: { id: 'vi', label: 'Vietnamese' },
+        JAPANESE: { id: 'ja', label: 'Japanese' }
+    }
+};
+
+// Default Settings
+const DEFAULT_SETTINGS = {
+    FIGMA_TO_CODE: {
+        framework: FRAMEWORKS.FIGMA_TO_CODE.VANILLA.id,
+        cssFramework: FRAMEWORKS.CSS.VANILLA.id,
+        model: DEFAULT_MODELS.FIGMA_TO_CODE,
+        includeResponsive: true,
+        includeInteractions: false
+    },
+    TEST_CASE_GENERATION: {
+        model: DEFAULT_MODELS.TEST_CASE_GENERATION,
+        testingFramework: FRAMEWORKS.TESTING.MANUAL.id,
+        includeUITests: true,
+        language: LANGUAGES.TEST_CASE.ENGLISH.id
+    },
+    SIZE: {
+        preset: SIZE_PRESETS.LARGE.id,
+        width: SIZE_PRESETS.LARGE.width,
+        height: SIZE_PRESETS.LARGE.height
+    }
+};
+
 const automateBtn = document.getElementById('generate-tests');
 const checkAccessibilityBtn = document.getElementById('check-accessibility');
 const iconComponentBtn = document.getElementById('icon-component');

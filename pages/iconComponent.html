@@ -77,12 +77,8 @@
                 <div class="setting-group">
                     <label for="model-select">AI Model:</label>
                     <select id="model-select">
-                        <option value="gpt-4o">GPT-4o (Recommended)</option>
-                        <option value="gpt-4o-mini">GPT-4o Mini (Budget)</option>
-                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Cheapest)</option>
-                        <option value="gpt-4.1">GPT-4.1</option>
-                        <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
+                        <option value="gpt-5-mini">GPT-5 Mini (Cost-effective)</option>
+                        <option value="o4-mini">O4 Mini (Higher quality)</option>
                     </select>
                 </div>
                 
@@ -174,13 +170,8 @@
                 <div class="setting-group">
                     <label for="test-generation-model">AI Model</label>
                     <select id="test-generation-model">
-                        <option value="gpt-4o-mini">GPT-4o Mini (Recommended for cost)</option>
-                        <option value="gpt-4o">GPT-4o (Best quality)</option>
-                        <option value="gpt-4.1">GPT-4.1 (For complex SRS)</option>
-                        <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
-                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                        <option value="gpt-4">GPT-4</option>
-                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Budget)</option>
+                        <option value="gpt-5-mini" selected>GPT-5 Mini (Cost-effective)</option>
+                        <option value="o4-mini">O4 Mini (Higher quality)</option>
                     </select>
                 </div>
 
@@ -277,10 +268,18 @@
 <script src="../deps/highlight/languages/markdown.min.js"></script>
 <script src="../scripts/constants.js"></script>
 <script src="../scripts/utils.js"></script>
+<script src="../scripts/utils/storageWrapper.js"></script>
 <script src="../scripts/utils/testCaseValidation.js"></script>
 <script src="../scripts/result/common.js"></script>
 <script src="../scripts/result/getIconComponent.js"></script>
 <script src="../scripts/result/figmaToCode.js"></script>
 <script src="../scripts/result/testCaseGeneration.js"></script>
+
+<script>
+// Initialize dropdowns from constants when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    initializeDropdownsFromConstants();
+});
+</script>
 
 </html>
