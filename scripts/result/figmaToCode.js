@@ -158,22 +158,8 @@ function setupEventListeners() {
         generateCodeItem.addEventListener('click', handleGenerateCode);
     }
 
-    // Close modals when clicking outside
-    if (settingsModal) {
-        settingsModal.addEventListener('click', (e) => {
-            if (e.target === settingsModal) {
-                closeSettingsModal();
-            }
-        });
-    }
-
-    if (codeModal) {
-        codeModal.addEventListener('click', (e) => {
-            if (e.target === codeModal) {
-                closeCodeModal();
-            }
-        });
-    }
+    // NOTE: Backdrop click to close functionality removed to prevent accidental modal closure
+    // Users must use explicit close buttons (X button, Cancel, etc.)
 
     // Hide context menu when clicking elsewhere
     document.addEventListener('click', hideContextMenu);

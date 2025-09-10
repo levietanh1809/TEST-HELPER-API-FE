@@ -236,3 +236,29 @@ curl http://localhost:3000/api/images/figma-to-code/health
 **🎉 You're ready to generate HTML + CSS from Figma!**
 
 *Defaults: HTML + CSS + Responsive + GPT-4o*
+
+---
+
+## ⚡ Quick Reference: SRS → Markdown (in Test Case Modal)
+
+### Minimal Usage
+```javascript
+// Paste SRS text into #srs-description, then click Convert to Markdown
+// Result is cached locally to avoid re-calling API when reopening
+```
+
+### Endpoint
+```http
+POST /api/images/srs-to-markdown/convert
+```
+
+### Storage Keys
+- `STORAGE.SRS_TO_MARKDOWN_CACHE`
+- `STORAGE.SRS_TO_MARKDOWN_MODEL`
+- `STORAGE.SRS_TO_MARKDOWN_OUTPUT_FORMAT`
+- `STORAGE.SRS_TO_MARKDOWN_PRESERVE_FORMATTING`
+
+### Notes
+- Max 50,000 chars; character counter included
+- Copy options UI removed (simplified UX)
+- Auto-load cached markdown when modal opens (if textarea empty)

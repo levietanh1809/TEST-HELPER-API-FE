@@ -11,6 +11,12 @@ let testCaseGenerationSettings = {
     language: DEFAULT_SETTINGS.TEST_CASE_GENERATION.language
 };
 
+let srsToMarkdownSettings = {
+    model: DEFAULT_SETTINGS.SRS_TO_MARKDOWN.model,
+    outputFormat: DEFAULT_SETTINGS.SRS_TO_MARKDOWN.outputFormat,
+    preserveFormatting: DEFAULT_SETTINGS.SRS_TO_MARKDOWN.preserveFormatting
+};
+
 let currentGeneratedTestCases = [];
 let currentTestCaseSummary = null;
 let currentComponentData = null;
@@ -21,7 +27,11 @@ let currentGroupedTestCases = null;
  */
 function initializeTestCaseGeneration() {
     loadTestCaseGenerationSettings();
+    loadSRSToMarkdownSettings();
     setupTestCaseEventListeners();
+    
+    // Initialize character counter
+    updateCharacterCounter();
 }
 
 /**
@@ -186,22 +196,22 @@ function setupTestCaseEventListeners() {
         generateTestCaseItem.addEventListener('click', handleGenerateTestCaseAction);
     }
 
-    // Close modals when clicking outside
-    if (testCaseModal) {
-        testCaseModal.addEventListener('click', (e) => {
-            if (e.target === testCaseModal) {
-                closeTestCaseModal();
-            }
-        });
+    // SRS to Markdown functionality
+    const convertToMarkdownBtn = document.getElementById('convert-to-markdown-btn');
+    const srsDescription = document.getElementById('srs-description');
+    const charCount = document.getElementById('char-count');
+
+    if (convertToMarkdownBtn) {
+        convertToMarkdownBtn.addEventListener('click', handleSRSToMarkdownConversion);
     }
 
-    if (testCaseResultsModal) {
-        testCaseResultsModal.addEventListener('click', (e) => {
-            if (e.target === testCaseResultsModal) {
-                closeTestCaseResultsModal();
-            }
-        });
+    if (srsDescription) {
+        srsDescription.addEventListener('input', updateCharacterCounter);
+        srsDescription.addEventListener('paste', handlePasteEvent);
     }
+
+    // NOTE: Backdrop click to close functionality removed to prevent accidental modal closure
+    // Users must use explicit close buttons (X button, Cancel, etc.)
 }
 
 /**
@@ -301,6 +311,30 @@ function openTestCaseModal() {
         updateTestCaseSettingsUI();
         modal.style.display = 'flex';
         
+        // Load cached SRS markdown if available to avoid re-calling API
+        (async () => {
+            try {
+                let data;
+                if (typeof storageWrapper !== 'undefined') {
+                    data = await storageWrapper.get([STORAGE.SRS_TO_MARKDOWN_CACHE]);
+                } else if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                    data = await chrome.storage.local.get([STORAGE.SRS_TO_MARKDOWN_CACHE]);
+                } else {
+                    data = {};
+                }
+                const cache = data && data[STORAGE.SRS_TO_MARKDOWN_CACHE];
+                if (cache && cache.markdownContent) {
+                    const srsDescription = document.getElementById('srs-description');
+                    if (srsDescription && (!srsDescription.value || srsDescription.value.trim().length === 0)) {
+                        srsDescription.value = cache.markdownContent;
+                        updateCharacterCounter();
+                    }
+                }
+            } catch (e) {
+                console.warn('Failed to load cached SRS markdown:', e);
+            }
+        })();
+
         // Focus on SRS description field
         const srsDescription = document.getElementById('srs-description');
         if (srsDescription) {
@@ -1023,9 +1057,229 @@ function setupTestCaseCheckboxes() {
     });
 }
 
+/**
+ * ===============================
+ * SRS TO MARKDOWN FUNCTIONALITY
+ * ===============================
+ */
+
+/**
+ * Update character counter and styling based on content length
+ */
+function updateCharacterCounter() {
+    const srsDescription = document.getElementById('srs-description');
+    const charCount = document.getElementById('char-count');
+    const charCountElement = charCount?.parentElement;
+    
+    if (!srsDescription || !charCount) return;
+    
+    const currentLength = srsDescription.value.length;
+    const maxLength = 50000;
+    
+    charCount.textContent = currentLength.toLocaleString();
+    
+    // Update styling based on length
+    if (charCountElement) {
+        charCountElement.classList.remove('near-limit', 'at-limit');
+        
+        if (currentLength >= maxLength * 0.9) {
+            charCountElement.classList.add('at-limit');
+        } else if (currentLength >= maxLength * 0.8) {
+            charCountElement.classList.add('near-limit');
+        }
+    }
+    
+    // Update convert button state
+    const convertBtn = document.getElementById('convert-to-markdown-btn');
+    if (convertBtn) {
+        convertBtn.disabled = currentLength === 0 || currentLength > maxLength;
+    }
+}
+
+/**
+ * Handle paste event - show convert button hint
+ */
+function handlePasteEvent(event) {
+    // Small delay to allow paste content to be processed
+    setTimeout(() => {
+        updateCharacterCounter();
+        
+        const convertBtn = document.getElementById('convert-to-markdown-btn');
+        if (convertBtn && !convertBtn.disabled) {
+            // Add a subtle pulse animation to draw attention
+            convertBtn.style.animation = 'pulse 2s ease-in-out 3';
+            setTimeout(() => {
+                convertBtn.style.animation = '';
+            }, 6000);
+        }
+    }, 100);
+}
+
+/**
+ * Handle SRS to Markdown conversion
+ */
+async function handleSRSToMarkdownConversion() {
+    const srsDescription = document.getElementById('srs-description');
+    const convertBtn = document.getElementById('convert-to-markdown-btn');
+    
+    if (!srsDescription || !convertBtn) return;
+    
+    const srsText = srsDescription.value.trim();
+    
+    if (!srsText) {
+        showToast(RESULT.ERROR, 'Please enter some text to convert');
+        return;
+    }
+    
+    if (srsText.length > 50000) {
+        showToast(RESULT.ERROR, 'Text is too long. Maximum 50,000 characters allowed.');
+        return;
+    }
+    
+    try {
+        // Show loading state
+        showSRSConversionLoading(true);
+        
+        // Prepare API request
+        const requestBody = {
+            srsText: srsText,
+            model: srsToMarkdownSettings.model,
+            outputFormat: srsToMarkdownSettings.outputFormat,
+            preserveFormatting: srsToMarkdownSettings.preserveFormatting
+        };
+        
+        // Make API call
+        const response = await fetch(BE_API_LOCAL + ENDPOINTS.SRS_TO_MARKDOWN, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+        });
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.message || 'Failed to convert text to markdown');
+        }
+        
+        // Update textarea with formatted content
+        srsDescription.value = result.data.markdownContent;
+        updateCharacterCounter();
+        
+        // Show success message
+        const stats = `Converted ${result.data.originalLength} → ${result.data.processedLength} characters`;
+        showToast(RESULT.SUCCESS, `✨ Text converted to markdown! ${stats}`);
+
+        // Persist converted markdown locally to avoid re-calling API next time
+        try {
+            if (typeof storageWrapper !== 'undefined') {
+                await storageWrapper.set({
+                    [STORAGE.SRS_TO_MARKDOWN_CACHE]: {
+                        markdownContent: result.data.markdownContent,
+                        originalLength: result.data.originalLength,
+                        processedLength: result.data.processedLength,
+                        model: result.data.model,
+                        generatedAt: result.data.generatedAt || new Date().toISOString()
+                    }
+                });
+            } else if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                await chrome.storage.local.set({
+                    [STORAGE.SRS_TO_MARKDOWN_CACHE]: {
+                        markdownContent: result.data.markdownContent,
+                        originalLength: result.data.originalLength,
+                        processedLength: result.data.processedLength,
+                        model: result.data.model,
+                        generatedAt: result.data.generatedAt || new Date().toISOString()
+                    }
+                });
+            }
+        } catch (persistError) {
+            console.warn('Failed to cache SRS markdown:', persistError);
+        }
+        
+        // Log conversion details
+        console.log('SRS to Markdown conversion completed:', {
+            originalLength: result.data.originalLength,
+            processedLength: result.data.processedLength,
+            model: result.data.model,
+            processingTime: result.processingTime
+        });
+        
+    } catch (error) {
+        console.error('SRS to Markdown conversion error:', error);
+        showToast(RESULT.ERROR, `Conversion failed: ${error.message}`);
+    } finally {
+        showSRSConversionLoading(false);
+    }
+}
+
+/**
+ * Show/hide loading state for SRS conversion
+ */
+function showSRSConversionLoading(isLoading) {
+    const convertBtn = document.getElementById('convert-to-markdown-btn');
+    const icon = convertBtn?.querySelector('i');
+    
+    if (!convertBtn) return;
+    
+    if (isLoading) {
+        convertBtn.disabled = true;
+        convertBtn.classList.add('loading');
+        if (icon) {
+            icon.className = 'bi bi-arrow-clockwise';
+        }
+        convertBtn.innerHTML = convertBtn.innerHTML.replace('Convert to Markdown', 'Converting...');
+    } else {
+        convertBtn.disabled = false;
+        convertBtn.classList.remove('loading');
+        if (icon) {
+            icon.className = 'bi bi-markdown';
+        }
+        convertBtn.innerHTML = '<i class="bi bi-markdown"></i> Convert to Markdown';
+    }
+}
+
+// (Removed copy helpers per requirements)
+
+/**
+ * Load SRS to Markdown settings from storage
+ */
+async function loadSRSToMarkdownSettings() {
+    try {
+        let data;
+        if (typeof storageWrapper !== 'undefined') {
+            data = await storageWrapper.get([
+                STORAGE.SRS_TO_MARKDOWN_MODEL,
+                STORAGE.SRS_TO_MARKDOWN_OUTPUT_FORMAT,
+                STORAGE.SRS_TO_MARKDOWN_PRESERVE_FORMATTING
+            ]);
+        } else if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+            data = await chrome.storage.local.get([
+                STORAGE.SRS_TO_MARKDOWN_MODEL,
+                STORAGE.SRS_TO_MARKDOWN_OUTPUT_FORMAT,
+                STORAGE.SRS_TO_MARKDOWN_PRESERVE_FORMATTING
+            ]);
+        } else {
+            data = {};
+        }
+        
+        // Apply loaded settings or defaults
+        srsToMarkdownSettings.model = data[STORAGE.SRS_TO_MARKDOWN_MODEL] || DEFAULT_SETTINGS.SRS_TO_MARKDOWN.model;
+        srsToMarkdownSettings.outputFormat = data[STORAGE.SRS_TO_MARKDOWN_OUTPUT_FORMAT] || DEFAULT_SETTINGS.SRS_TO_MARKDOWN.outputFormat;
+        srsToMarkdownSettings.preserveFormatting = data[STORAGE.SRS_TO_MARKDOWN_PRESERVE_FORMATTING] || DEFAULT_SETTINGS.SRS_TO_MARKDOWN.preserveFormatting;
+        
+    } catch (error) {
+        console.warn('Failed to load SRS to Markdown settings:', error);
+        // Use defaults on error
+        srsToMarkdownSettings = { ...DEFAULT_SETTINGS.SRS_TO_MARKDOWN };
+    }
+}
+
 // Make functions available globally for onclick handlers
 window.copyTestCaseToClipboard = copyTestCaseToClipboard;
 window.copyCategoryToClipboard = copyCategoryToClipboard;
+// (Removed global exports for copy helpers)
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {

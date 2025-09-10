@@ -143,10 +143,24 @@
             <div class="modal-body">
                 <div class="setting-group">
                     <label for="srs-description">SRS Description (Optional)</label>
-                    <textarea 
-                        id="srs-description" 
-                        placeholder="Describe functionality to test... e.g. User Login Functionality: Users can log in with email and password, System validates credentials against database, Failed attempts are logged... If left empty, will generate comprehensive test cases based on Figma component."
-                        rows="5"></textarea>
+                    <div class="textarea-with-tools">
+                        <textarea 
+                            id="srs-description" 
+                            placeholder="Describe functionality to test... e.g. User Login Functionality: Users can log in with email and password, System validates credentials against database, Failed attempts are logged... If left empty, will generate comprehensive test cases based on Figma component."
+                            rows="5"
+                            maxlength="50000"></textarea>
+                        <div class="textarea-tools">
+                            <div class="character-counter">
+                                <span id="char-count">0</span> / 50,000 characters
+                            </div>
+                            <button type="button" id="convert-to-markdown-btn" class="convert-button" title="Convert pasted text to structured markdown">
+                                <i class="bi bi-markdown"></i> Convert to Markdown
+                            </button>
+                        </div>
+                    </div>
+                    <div class="help-text">
+                        <p><strong>💡 Pro Tip:</strong> You can copy-paste content from Excel, Word, or any text format. Click "Convert to Markdown" to automatically structure and format your SRS content using AI.</p>
+                    </div>
                 </div>
 
                 <div class="setting-group">

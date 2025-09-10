@@ -617,6 +617,151 @@ button.edit-btn {
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
+/* Textarea with tools styles */
+.textarea-with-tools {
+    position: relative;
+}
+
+.textarea-tools {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    padding: 8px 0;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.character-counter {
+    font-size: 0.8rem;
+    color: #6b7280;
+    font-family: 'Sora', sans-serif;
+}
+
+.character-counter.near-limit {
+    color: #f59e0b;
+    font-weight: 500;
+}
+
+.character-counter.at-limit {
+    color: #ef4444;
+    font-weight: 600;
+}
+
+.convert-button {
+    background-color: #8b5cf6;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    font-weight: 500;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.convert-button:hover {
+    background-color: #7c3aed;
+    transform: translateY(-1px);
+}
+
+.convert-button:disabled {
+    background-color: #d1d5db;
+    color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.convert-button.loading {
+    background-color: #7c3aed;
+    cursor: not-allowed;
+}
+
+.convert-button.loading i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); }
+    100% { transform: scale(1); }
+}
+
+.help-text {
+    margin-top: 12px;
+    padding: 12px;
+    background-color: #f0f9ff;
+    border: 1px solid #e0f2fe;
+    border-radius: 6px;
+    border-left: 4px solid #0ea5e9;
+}
+
+.help-text p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #0f172a;
+    line-height: 1.4;
+}
+
+.help-text strong {
+    color: #0c4a6e;
+}
+
+/* Copy options styles */
+.copy-options {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.copy-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.copy-markdown-btn,
+.copy-excel-btn {
+    background-color: #10b981;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    font-weight: 500;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.copy-markdown-btn:hover {
+    background-color: #059669;
+    transform: translateY(-1px);
+}
+
+.copy-excel-btn {
+    background-color: #0ea5e9;
+}
+
+.copy-excel-btn:hover {
+    background-color: #0284c7;
+    transform: translateY(-1px);
+}
+
 /* Button styles */
 .save-button {
     background-color: #10b981;
@@ -1346,5 +1491,24 @@ button.edit-btn {
     .setting-group input[type="text"] {
         font-size: 0.85rem;
         box-sizing: border-box;
+    }
+    
+    .textarea-tools {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .character-counter {
+        text-align: center;
+    }
+    
+    .convert-button {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .help-text {
+        font-size: 0.8rem;
     }
 }

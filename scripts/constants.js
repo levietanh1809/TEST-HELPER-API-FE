@@ -3,7 +3,6 @@ const OPENAI_PROXY_BASE_URL = 'https://api.testcraft.app';
 const BE_API_LOCAL = 'http://10.1.45.119:3000';
 
 
-
 const STORAGE = {
     CUSTOM_SERVER_URL: 'custom-server-url',
     ELEMENT_PICKED: 'element-picked',
@@ -29,6 +28,10 @@ const STORAGE = {
     TEST_CASE_GENERATION_FRAMEWORK: 'test-case-generation-framework',
     TEST_CASE_GENERATION_INCLUDE_UI: 'test-case-generation-include-ui',
     TEST_CASE_GENERATION_LANGUAGE: 'test-case-generation-language',
+    SRS_TO_MARKDOWN_MODEL: 'srs-to-markdown-model',
+    SRS_TO_MARKDOWN_OUTPUT_FORMAT: 'srs-to-markdown-output-format',
+    SRS_TO_MARKDOWN_PRESERVE_FORMATTING: 'srs-to-markdown-preserve-formatting',
+    SRS_TO_MARKDOWN_CACHE: 'srs-to-markdown-cache',
 };
 
 const LANGUAGE = {
@@ -83,6 +86,7 @@ const ENDPOINTS = {
     FIGMA_TO_CODE_CREATE_PACKAGE: '/api/images/figma-to-code/create-package',
     FIGMA_TO_CODE_OPTIONS: '/api/images/figma-to-code/options',
     TEST_CASE_GENERATION: '/api/images/test-case-generation/generate',
+    SRS_TO_MARKDOWN: '/api/images/srs-to-markdown/convert',
 };
 
 const FEATURE = {
@@ -93,6 +97,7 @@ const FEATURE = {
     GET_ICON_COMPONENTS: 'icon-components',
     FIGMA_TO_CODE: 'figma-to-code',
     TEST_CASE_GENERATION: 'test-case-generation',
+    SRS_TO_MARKDOWN: 'srs-to-markdown',
 };
 
 // AI Models Configuration
@@ -131,6 +136,7 @@ const AI_MODELS = {
 const DEFAULT_MODELS = {
     FIGMA_TO_CODE: AI_MODELS.GPT5_MINI.id,
     TEST_CASE_GENERATION: AI_MODELS.GPT5_MINI.id,
+    SRS_TO_MARKDOWN: AI_MODELS.GPT5_MINI.id,
     GENERAL: AI_MODELS.GPT5_MINI.id
 };
 
@@ -156,6 +162,11 @@ const FRAMEWORKS = {
         TESTING_LIBRARY: { id: 'testing_library', label: 'Testing Library' },
         VITEST: { id: 'vitest', label: 'Vitest' },
         SELENIUM: { id: 'selenium', label: 'Selenium' }
+    },
+    SRS_OUTPUT: {
+        MARKDOWN: { id: 'markdown', label: 'Markdown (Default)' },
+        HTML: { id: 'html', label: 'HTML' },
+        PLAIN: { id: 'plain', label: 'Plain Text' }
     }
 };
 
@@ -190,6 +201,11 @@ const DEFAULT_SETTINGS = {
         testingFramework: FRAMEWORKS.TESTING.MANUAL.id,
         includeUITests: true,
         language: LANGUAGES.TEST_CASE.ENGLISH.id
+    },
+    SRS_TO_MARKDOWN: {
+        model: DEFAULT_MODELS.SRS_TO_MARKDOWN,
+        outputFormat: FRAMEWORKS.SRS_OUTPUT.MARKDOWN.id,
+        preserveFormatting: false
     },
     SIZE: {
         preset: SIZE_PRESETS.LARGE.id,

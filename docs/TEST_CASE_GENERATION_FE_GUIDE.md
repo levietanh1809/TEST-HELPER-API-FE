@@ -1304,3 +1304,92 @@ export function useTestCaseGeneration() {
 *Last Updated: Today*  
 *Features: SRS Analysis + Optional UI Testing with Figma Integration*  
 *Contact: Backend Team for support*
+
+---
+
+## ✨ New: SRS → Markdown Conversion (Frontend Integration)
+
+### 🎯 Overview
+Allows users to paste raw SRS text (from Excel/Word/any source) and convert it to structured Markdown via AI directly inside the Test Case Generation modal.
+
+### 🔌 API Endpoint
+```http
+POST /api/images/srs-to-markdown/convert
+Content-Type: application/json
+```
+
+#### Request
+```typescript
+{
+  srsText: string;                    // Max 50,000 chars
+  preserveFormatting?: boolean;       // Default: false
+  model?: 'gpt-5-mini' | 'o4-mini';  // Default: gpt-5-mini
+  outputFormat?: 'markdown' | 'html' | 'plain'; // Default: 'markdown'
+}
+```
+
+#### Response
+```typescript
+{
+  success: boolean;
+  data?: {
+    markdownContent: string;
+    originalLength: number;
+    processedLength: number;
+    model: string;
+    generatedAt: string;
+  };
+  message?: string;
+  processingTime?: number;
+}
+```
+
+### 🧩 UI Integration (Modal)
+- Textarea: `#srs-description`
+- Convert button: `#convert-to-markdown-btn`
+- Character counter: `#char-count` (limit 50,000, color-coded)
+- Help text: English guidance for copy/paste and conversion
+
+Behavior:
+- Paste detection highlights the convert button (subtle pulse)
+- Loading state with spinner on convert
+- Success toast shows original → processed length stats
+- Copy options UI was removed (per requirements)
+
+### 💾 Persistent Caching (No Re-API)
+- Key: `STORAGE.SRS_TO_MARKDOWN_CACHE`
+- Structure:
+```typescript
+{
+  markdownContent: string;
+  originalLength: number;
+  processedLength: number;
+  model: string;
+  generatedAt: string;
+}
+```
+- On successful conversion, the markdown is saved to local storage
+- On opening the Test Case modal, if `#srs-description` is empty and cache exists, it is auto-populated from cache (no API call)
+
+### 🛠️ Frontend Notes
+- Constants added in `scripts/constants.js`:
+  - `ENDPOINTS.SRS_TO_MARKDOWN = '/api/images/srs-to-markdown/convert'`
+  - `STORAGE.SRS_TO_MARKDOWN_CACHE`
+  - `STORAGE.SRS_TO_MARKDOWN_MODEL`
+  - `STORAGE.SRS_TO_MARKDOWN_OUTPUT_FORMAT`
+  - `STORAGE.SRS_TO_MARKDOWN_PRESERVE_FORMATTING`
+- Defaults in `DEFAULT_SETTINGS.SRS_TO_MARKDOWN`: model, outputFormat, preserveFormatting
+- Implemented in `scripts/result/testCaseGeneration.js`
+
+### ⚠️ Validation & Errors
+- Empty input → error toast
+- > 50,000 chars → error toast
+- Network/API errors → error toast + console error
+
+### ✅ Removed (per product decision)
+- Temporary copy options UI (Copy Markdown / Copy for Excel) — removed to simplify UX
+
+### 📱 Responsive
+- Tools stack vertically on small screens; buttons go full-width
+
+---
