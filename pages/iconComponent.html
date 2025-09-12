@@ -148,10 +148,10 @@
                             id="srs-description" 
                             placeholder="Describe functionality to test... e.g. User Login Functionality: Users can log in with email and password, System validates credentials against database, Failed attempts are logged... If left empty, will generate comprehensive test cases based on Figma component."
                             rows="5"
-                            maxlength="50000"></textarea>
+                            maxlength="200000"></textarea>
                         <div class="textarea-tools">
                             <div class="character-counter">
-                                <span id="char-count">0</span> / 50,000 characters
+                                <span id="char-count">0</span> / 200,000 characters
                             </div>
                             <button type="button" id="convert-to-markdown-btn" class="convert-button" title="Convert pasted text to structured markdown">
                                 <i class="bi bi-markdown"></i> Convert to Markdown
@@ -186,6 +186,7 @@
                     <select id="test-generation-model">
                         <option value="gpt-5-mini" selected>GPT-5 Mini (Cost-effective)</option>
                         <option value="o4-mini">O4 Mini (Higher quality)</option>
+                        <option value="gpt-5">GPT 5 (Balanced quality)</option>
                     </select>
                 </div>
 
@@ -257,6 +258,70 @@
                 <button id="close-test-case-results-btn" class="cancel-button">
                     <i class="bi bi-x-lg"></i> Close
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Format Selection Modal -->
+    <div id="export-format-modal" class="modal" style="display: none;">
+        <div class="modal-content export-format-modal-content">
+            <div class="modal-header">
+                <h2>Choose Export Format</h2>
+                <span class="close-btn" id="export-format-close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="format-options">
+                    <div class="format-option" data-format="json">
+                        <div class="format-icon">
+                            <i class="bi bi-file-earmark-code"></i>
+                        </div>
+                        <div class="format-info">
+                            <h3>JSON Format</h3>
+                            <p>Export test cases as structured JSON data with complete test case details, grouping, and metadata. Focused on test case content only.</p>
+                            <div class="format-features">
+                                <span class="feature-tag">Complete Test Data</span>
+                                <span class="feature-tag">Structured</span>
+                                <span class="feature-tag">Machine Readable</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="format-option" data-format="markdown">
+                        <div class="format-icon">
+                            <i class="bi bi-file-earmark-text"></i>
+                        </div>
+                        <div class="format-info">
+                            <h3>Markdown Format</h3>
+                            <p>Export test cases as formatted markdown tables, perfect for documentation and sharing with team members.</p>
+                            <div class="format-features">
+                                <span class="feature-tag">Human Readable</span>
+                                <span class="feature-tag">Table Format</span>
+                                <span class="feature-tag">Documentation Ready</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="format-option" data-format="excel">
+                        <div class="format-icon">
+                            <i class="bi bi-file-earmark-spreadsheet"></i>
+                        </div>
+                        <div class="format-info">
+                            <h3>Excel Format</h3>
+                            <p>Export test cases as professional Excel workbooks with multiple worksheets, styling, and enhanced formatting.</p>
+                            <div class="format-features">
+                                <span class="feature-tag">Professional</span>
+                                <span class="feature-tag">Multiple Sheets</span>
+                                <span class="feature-tag">Enhanced Formatting</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="confirm-export-btn" class="save-button" disabled>
+                    <i class="bi bi-download"></i> Export
+                </button>
+                <button id="cancel-export-btn" class="cancel-button">Cancel</button>
             </div>
         </div>
     </div>

@@ -2,7 +2,6 @@ const OPENAI_PROXY_BASE_URL = 'https://api.testcraft.app';
 
 const BE_API_LOCAL = 'http://10.1.45.119:3000';
 
-
 const STORAGE = {
     CUSTOM_SERVER_URL: 'custom-server-url',
     ELEMENT_PICKED: 'element-picked',
@@ -87,6 +86,9 @@ const ENDPOINTS = {
     FIGMA_TO_CODE_OPTIONS: '/api/images/figma-to-code/options',
     TEST_CASE_GENERATION: '/api/images/test-case-generation/generate',
     SRS_TO_MARKDOWN: '/api/images/srs-to-markdown/convert',
+    TEST_CASE_EXPORT_MARKDOWN: '/api/images/test-case-export/markdown',
+    TEST_CASE_EXPORT_EXCEL: '/api/images/test-case-export/excel',
+    TEST_CASE_EXPORT_HEALTH: '/api/images/test-case-export/health',
 };
 
 const FEATURE = {
@@ -128,6 +130,20 @@ const AI_MODELS = {
             tokensPerMinute: 200000,
             requestsPerMinute: 500,
             tokensPerDay: 2000000
+        }
+    },
+    GPT5: {
+        id: 'gpt-5',
+        label: 'GPT 5 (Balanced quality)',
+        pricing: {
+            input: 2.00,
+            cachedInput: 0.50,
+            output: 8.00
+        },
+        limits: {
+            tokensPerMinute: 80000,
+            requestsPerMinute: 100,
+            tokensPerDay: 500000
         }
     }
 };

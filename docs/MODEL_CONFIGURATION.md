@@ -91,3 +91,13 @@ The configuration automatically applies when:
 - Invalid model IDs are encountered in storage
 
 All pricing information is available programmatically for cost calculations and user interface displays.
+
+---
+
+## 📌 Recent Updates (2025-09-12)
+
+- Added new model: **GPT 5** (`gpt-5`) for Test Case Generation
+  - Pricing (per 1K tokens): Input $2.00, Cached Input $0.50, Output $8.00
+  - Limits: 80,000 TPM, 100 RPM, 500,000 TPD
+- Removed legacy reference to GPT‑4.1. Any stored `gpt-4.1` is auto-mapped to `gpt-5` when loading settings.
+- Test Case Generation model options in UI: `gpt-5-mini`, `o4-mini`, `gpt-5`.

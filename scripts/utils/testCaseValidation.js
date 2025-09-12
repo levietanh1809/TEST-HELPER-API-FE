@@ -26,10 +26,10 @@ function validateSRSDescription(srsDescription) {
         };
     }
     
-    if (trimmed.length > 10000) {
+    if (trimmed.length > 200000) {
         return {
             isValid: false,
-            error: 'SRS description is too long (maximum 10,000 characters)'
+            error: 'SRS description is too long (maximum 200,000 characters)'
         };
     }
     
@@ -146,7 +146,7 @@ function validateTestingFramework(testingFramework) {
  */
 function validateAIModel(model) {
     const validModels = [
-        'gpt-5-mini', 'o4-mini'
+        'gpt-5-mini', 'o4-mini', 'gpt-5'
     ];
     
     if (!model || !validModels.includes(model)) {

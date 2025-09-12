@@ -90,9 +90,9 @@ async function download() {
 
 | Model | Quality | Speed | Cost (per conversion) |
 |-------|---------|-------|---------------------|
-| `gpt-4o` | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | $0.02-0.04 **(Recommended)** |
-| `gpt-4o-mini` | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | $0.001-0.003 **(Budget)** |
-| `gpt-3.5-turbo` | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | $0.002-0.006 **(Cheapest)** |
+| `gpt-5-mini` | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ~$ low (default in this app) |
+| `o4-mini` | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | higher than gpt-5-mini |
+| `gpt-5` | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Input $2.00 / Cached $0.50 / Output $8.00 |
 
 ---
 
@@ -235,7 +235,7 @@ curl http://localhost:3000/api/images/figma-to-code/health
 
 **🎉 You're ready to generate HTML + CSS from Figma!**
 
-*Defaults: HTML + CSS + Responsive + GPT-4o*
+*Defaults (in this app): HTML + CSS + Responsive + GPT-5 Mini*
 
 ---
 

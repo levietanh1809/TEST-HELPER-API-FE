@@ -187,8 +187,34 @@ function setupTestCaseEventListeners() {
     }
     
     if (exportTestCasesBtn) {
-        exportTestCasesBtn.addEventListener('click', exportTestCases);
+        exportTestCasesBtn.addEventListener('click', showExportFormatModal);
     }
+
+    // Export format modal event listeners
+    const exportFormatModal = document.getElementById('export-format-modal');
+    const exportFormatClose = document.getElementById('export-format-close');
+    const confirmExportBtn = document.getElementById('confirm-export-btn');
+    const cancelExportBtn = document.getElementById('cancel-export-btn');
+
+    if (exportFormatClose) {
+        exportFormatClose.addEventListener('click', closeExportFormatModal);
+    }
+    
+    if (cancelExportBtn) {
+        cancelExportBtn.addEventListener('click', closeExportFormatModal);
+    }
+    
+    if (confirmExportBtn) {
+        confirmExportBtn.addEventListener('click', exportTestCases);
+    }
+
+    // Format option selection
+    document.querySelectorAll('.format-option').forEach(option => {
+        option.addEventListener('click', () => {
+            const format = option.dataset.format;
+            selectExportFormat(format);
+        });
+    });
 
     // Context menu test case generation
     const generateTestCaseItem = document.getElementById('generate-test-case-item');
@@ -810,21 +836,160 @@ function createTestCaseHTML(testCase, index, category = null) {
 }
 
 /**
- * Export test cases
+ * Copy text to clipboard with fallback support
  */
-async function exportTestCases() {
+async function copyToClipboard(text) {
+    try {
+        // Try modern clipboard API first
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+        } else {
+            // Fallback for older browsers or non-secure contexts
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (!successful) {
+                    throw new Error('execCommand failed');
+                }
+            } catch (err) {
+                throw new Error('Copy command failed');
+            } finally {
+                document.body.removeChild(textArea);
+            }
+        }
+    } catch (error) {
+        console.error('Error copying to clipboard:', error);
+        throw error;
+    }
+}
+
+/**
+ * Check export API health
+ */
+async function checkExportAPIHealth() {
+    try {
+        const response = await fetch(BE_API_LOCAL + ENDPOINTS.TEST_CASE_EXPORT_HEALTH, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        return result.success;
+    } catch (error) {
+        console.error('Export API health check failed:', error);
+        return false;
+    }
+}
+
+/**
+ * Show export format selection modal
+ */
+function showExportFormatModal() {
     if (!currentGeneratedTestCases || currentGeneratedTestCases.length === 0) {
         showToast(RESULT.ERROR, 'No test cases to export');
         return;
     }
 
+    const modal = document.getElementById('export-format-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        // Reset selection
+        document.querySelectorAll('.format-option').forEach(option => {
+            option.classList.remove('selected');
+        });
+        document.getElementById('confirm-export-btn').disabled = true;
+    }
+}
+
+/**
+ * Close export format modal
+ */
+function closeExportFormatModal() {
+    const modal = document.getElementById('export-format-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+/**
+ * Handle format option selection
+ */
+function selectExportFormat(format) {
+    // Remove previous selection
+    document.querySelectorAll('.format-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    
+    // Add selection to clicked option
+    const selectedOption = document.querySelector(`[data-format="${format}"]`);
+    if (selectedOption) {
+        selectedOption.classList.add('selected');
+    }
+    
+    // Enable confirm button
+    const confirmBtn = document.getElementById('confirm-export-btn');
+    if (confirmBtn) {
+        confirmBtn.disabled = false;
+    }
+}
+
+/**
+ * Export test cases based on selected format
+ */
+async function exportTestCases() {
+    const selectedFormat = document.querySelector('.format-option.selected')?.dataset.format;
+    
+    if (!selectedFormat) {
+        showToast(RESULT.ERROR, 'Please select an export format');
+        return;
+    }
+
+    closeExportFormatModal();
+
+    if (selectedFormat === 'json') {
+        await exportTestCasesAsJSON();
+    } else if (selectedFormat === 'markdown') {
+        await exportTestCasesAsMarkdown();
+    } else if (selectedFormat === 'excel') {
+        await exportTestCasesAsExcel();
+    }
+}
+
+/**
+ * Export test cases as JSON (cleaned data - no figma info)
+ */
+async function exportTestCasesAsJSON() {
     try {
+        // Clean test cases data - remove figma-related fields
+        const cleanedTestCases = currentGeneratedTestCases.map(tc => ({
+            id: tc.id,
+            title: tc.title,
+            description: tc.description,
+            category: tc.category,
+            priority: tc.priority,
+            type: tc.type,
+            preconditions: tc.preconditions || [],
+            steps: tc.steps || [],
+            expectedResult: tc.expectedResult,
+            tags: tc.tags || [],
+            estimatedTime: tc.estimatedTime
+        }));
+
         const exportData = {
-            testCases: currentGeneratedTestCases,
+            testCases: cleanedTestCases,
             groupedByCategory: currentGroupedTestCases,
             summary: currentTestCaseSummary,
             generatedAt: new Date().toISOString(),
-            componentData: currentComponentData,
             model: 'exported-from-frontend'
         };
 
@@ -836,11 +1001,198 @@ async function exportTestCases() {
         link.download = `test-cases-${Date.now()}.json`;
         link.click();
 
-        showToast(RESULT.SUCCESS, 'Test cases exported successfully!');
+        showToast(RESULT.SUCCESS, 'Test cases exported as JSON successfully!');
 
     } catch (error) {
-        console.error('Error exporting test cases:', error);
+        console.error('Error exporting test cases as JSON:', error);
         showToast(RESULT.ERROR, 'Failed to export test cases: ' + error.message);
+    }
+}
+
+/**
+ * Export test cases as Markdown via BE API
+ */
+async function exportTestCasesAsMarkdown() {
+    try {
+        // Show loading state
+        const exportBtn = document.getElementById('export-test-cases-btn');
+        if (exportBtn) {
+            exportBtn.disabled = true;
+            exportBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Checking API...';
+        }
+
+        // Check API health first
+        const isHealthy = await checkExportAPIHealth();
+        if (!isHealthy) {
+            throw new Error('Export API is not available. Please try again later.');
+        }
+
+        // Update loading state
+        if (exportBtn) {
+            exportBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Exporting...';
+        }
+
+        // Prepare test cases data for API - same format as JSON export
+        const testCasesForExport = currentGeneratedTestCases.map(tc => ({
+            id: tc.id,
+            title: tc.title,
+            description: tc.description,
+            category: tc.category,
+            priority: tc.priority,
+            type: tc.type,
+            preconditions: tc.preconditions || [],
+            steps: tc.steps || [],
+            expectedResult: tc.expectedResult,
+            tags: tc.tags || [],
+            estimatedTime: tc.estimatedTime
+        }));
+
+        // Get project name from form or use default
+        const projectNameInput = document.getElementById('project-name');
+        const projectName = projectNameInput?.value?.trim() || 'Test Project';
+
+        // Prepare API payload
+        const payload = {
+            testCases: testCasesForExport,
+            format: 'markdown',
+            projectName: projectName,
+            groupingStrategy: 'category',
+            includeSteps: true,
+            language: 'en'
+        };
+
+        // Call BE API
+        const response = await fetch(BE_API_LOCAL + ENDPOINTS.TEST_CASE_EXPORT_MARKDOWN, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.message || 'Export failed');
+        }
+
+        // Download the markdown content
+        const markdownContent = result.data.content;
+        const dataBlob = new Blob([markdownContent], { type: 'text/markdown' });
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `test-cases-${projectName.replace(/\s+/g, '-')}-${Date.now()}.md`;
+        link.click();
+
+        showToast(RESULT.SUCCESS, `Test cases exported to Markdown! (${result.data.totalTestCases} cases)`);
+
+    } catch (error) {
+        console.error('Error exporting test cases as Markdown:', error);
+        showToast(RESULT.ERROR, 'Failed to export test cases: ' + error.message);
+    } finally {
+        // Reset button state
+        const exportBtn = document.getElementById('export-test-cases-btn');
+        if (exportBtn) {
+            exportBtn.disabled = false;
+            exportBtn.innerHTML = '<i class="bi bi-download"></i> Export Test Cases';
+        }
+    }
+}
+
+/**
+ * Export test cases to Excel via BE API
+ */
+async function exportTestCasesAsExcel() {
+    try {
+        // Show loading state
+        const exportBtn = document.getElementById('export-test-cases-btn');
+        if (exportBtn) {
+            exportBtn.disabled = true;
+            exportBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Checking API...';
+        }
+
+        // Check API health first
+        const isHealthy = await checkExportAPIHealth();
+        if (!isHealthy) {
+            throw new Error('Export API is not available. Please try again later.');
+        }
+
+        // Update loading state
+        if (exportBtn) {
+            exportBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Exporting Excel...';
+        }
+
+        // Prepare test cases data for API - same format as JSON export
+        const testCasesForExport = currentGeneratedTestCases.map(tc => ({
+            id: tc.id,
+            title: tc.title,
+            description: tc.description,
+            category: tc.category,
+            priority: tc.priority,
+            type: tc.type,
+            preconditions: tc.preconditions || [],
+            steps: tc.steps || [],
+            expectedResult: tc.expectedResult,
+            tags: tc.tags || [],
+            estimatedTime: tc.estimatedTime
+        }));
+
+        // Get project name from form or use default
+        const projectNameInput = document.getElementById('project-name');
+        const projectName = projectNameInput?.value?.trim() || 'Test Project';
+
+        // Prepare API payload
+        const payload = {
+            testCases: testCasesForExport,
+            format: 'excel',
+            projectName: projectName,
+            groupingStrategy: 'category',
+            includeSteps: true,
+            language: 'en'
+        };
+
+        // Call BE API
+        const response = await fetch(BE_API_LOCAL + ENDPOINTS.TEST_CASE_EXPORT_EXCEL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.message || 'Excel export failed');
+        }
+
+        // Download the Excel file from base64 content
+        const binaryString = atob(result.data.content);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        const dataBlob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `test-cases-${projectName.replace(/\s+/g, '-')}-${Date.now()}.xlsx`;
+        link.click();
+
+        showToast(RESULT.SUCCESS, `Test cases exported to Excel! (${result.data.totalTestCases} cases)`);
+
+    } catch (error) {
+        console.error('Error exporting test cases as Excel:', error);
+        showToast(RESULT.ERROR, 'Failed to export test cases as Excel: ' + error.message);
+    } finally {
+        // Reset button state
+        const exportBtn = document.getElementById('export-test-cases-btn');
+        if (exportBtn) {
+            exportBtn.disabled = false;
+            exportBtn.innerHTML = '<i class="bi bi-download"></i> Export Test Cases';
+        }
     }
 }
 
@@ -882,8 +1234,8 @@ async function copyTestCaseToClipboard(testCaseId) {
         // Generate tester-friendly text for single test case
         const testCaseText = generateSingleTestCaseText(testCase, testCaseId);
         
-        // Copy to clipboard
-        await navigator.clipboard.writeText(testCaseText);
+        // Copy to clipboard with fallback
+        await copyToClipboard(testCaseText);
         showToast(RESULT.SUCCESS, `${testCaseId} copied to clipboard!`);
         
     } catch (error) {
@@ -972,8 +1324,8 @@ async function copyCategoryToClipboard(category) {
         // Generate tester-friendly text
         const categoryText = generateTesterFriendlyText(category, categoryTestCases);
         
-        // Copy to clipboard
-        await navigator.clipboard.writeText(categoryText);
+        // Copy to clipboard with fallback
+        await copyToClipboard(categoryText);
         showToast(RESULT.SUCCESS, `${category.replace('_', ' ').toUpperCase()} tests copied to clipboard!`);
         
     } catch (error) {
@@ -1074,7 +1426,7 @@ function updateCharacterCounter() {
     if (!srsDescription || !charCount) return;
     
     const currentLength = srsDescription.value.length;
-    const maxLength = 50000;
+    const maxLength = 200000;
     
     charCount.textContent = currentLength.toLocaleString();
     
@@ -1131,8 +1483,8 @@ async function handleSRSToMarkdownConversion() {
         return;
     }
     
-    if (srsText.length > 50000) {
-        showToast(RESULT.ERROR, 'Text is too long. Maximum 50,000 characters allowed.');
+    if (srsText.length > 200000) {
+        showToast(RESULT.ERROR, 'Text is too long. Maximum 200,000 characters allowed.');
         return;
     }
     
